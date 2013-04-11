@@ -12,8 +12,13 @@ import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
+import javax.swing.border.Border;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.plaf.basic.BasicTableUI;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
@@ -40,27 +45,59 @@ public class Main extends JFrame {
 	}
 
 	class MyTable extends JTable {
+		/**
+		 * 
+		 */
+		boolean showLineNumbers = true;
+		private static final long serialVersionUID = 1L;
+		MyTableModel m = (MyTableModel)this.getModel();
+		
+		
 		public MyTable() {
-			super(new MyTableModel());
+			super(new MyTableModel(true));
+			/*
+			 * if the table shows line Number then define it's line No column Renderer
+			 */
+			if(showLineNumbers)
+				this.columnModel.getColumn(0).setCellRenderer(new LineNumberRenderer(true));
 			this.setUI(new MyTableUI());
+		}
+		
+		public Rectangle getSapnRec(MyTableModel.SpanArea s){
+			return super.getCellRect(s.beginX, s.beginY, true).union(super.getCellRect(s.endX, s.endY, true));
 		}
 
 		@Override 
 		public Rectangle getCellRect(int row, int col, boolean b){
-			MyTableModel m = (MyTableModel)this.getModel();
-			SpanArea s = m.isLeadingCell(row, col);
+			SpanArea s = m.isSpaened(row, col);
 			if(s!=null){
-				Rectangle or = super.getCellRect(row, col, true).union(super.getCellRect(s.endX, s.endY, true));
-				System.out.println(or);
+				Rectangle or = getSapnRec(s);
 				return or;
 			}
 			else{
 				return super.getCellRect(row,col,true);
 			}
 		}
+
+		@Override
+		protected void paintComponent(Graphics g) {
+			super.paintComponent(g);
+		}
+
+		@Override
+		public void repaint(Rectangle r) {
+			for(MyTableModel.SpanArea s:m.spanAreas){
+				super.repaint(getSapnRec(s));
+			}
+			super.repaint(r);
+		}
+		
+		
+		
 	}
 
 	class MyTableModel extends AbstractTableModel {
+		boolean showLineNumber;
 		List<SpanArea> spanAreas = new ArrayList<SpanArea>();
 		private String[] columnNames = { "First Name", "Last Name", "Sport",
 				"# of Years", "Vegetarian" };
@@ -74,8 +111,9 @@ public class Main extends JFrame {
 						new Boolean(true) },
 				{ "Joe", "Brown", "Pool", new Integer(10), new Boolean(false) } };
 
-		public MyTableModel() {
+		public MyTableModel(boolean showLineNumber) {
 			super();
+			this.showLineNumber = showLineNumber;
 			this.addSpan(2, 2, 3, 3);
 		}
 
@@ -86,12 +124,25 @@ public class Main extends JFrame {
 
 		@Override
 		public int getColumnCount() {
-			return columnNames.length;
+			return showLineNumber?columnNames.length+1:columnNames.length;
 		}
 
 		@Override
 		public Object getValueAt(int rowIndex, int columnIndex) {
-			return data[rowIndex][columnIndex];
+			if(showLineNumber)
+				return columnIndex==0?rowIndex:data[rowIndex][columnIndex-1];
+			else
+				return data[rowIndex][columnIndex];
+		}
+		
+		
+
+		@Override
+		public String getColumnName(int column) {
+			if(showLineNumber)
+				return column==0?"":columnNames[column-1];
+			else
+			    return columnNames[column];
 		}
 
 		public void addSpan(int x1, int y1, int x2, int y2) {
@@ -105,27 +156,30 @@ public class Main extends JFrame {
 					+ y2);
 		}
 
-		public boolean isSpaened(int row, int col) {
-			boolean isSpaned = false;
+		public SpanArea isSpaened(int row, int col) {
+			SpanArea area = null;
 			for (SpanArea s : spanAreas) {
-				if ((row > s.beginX && row <= s.endX && col > s.beginY && col <= s.endY)
-						|| ((row == s.beginX && col > s.beginY && col <= s.endY) || (col == s.beginY && row > s.beginX
-								& row <= s.endX)))
-					isSpaned = true;
+//				if ((row > s.beginX && row <= s.endX && col > s.beginY && col <= s.endY)
+//						|| ((row == s.beginX && col > s.beginY && col <= s.endY) || (col == s.beginY && row > s.beginX
+//								& row <= s.endX)))
+				if(row>=s.beginX&&row<=s.endX&&col>=s.beginY&&col<=s.endY)
+					area = s;
 			}
-			return isSpaned;
+			return area;
 		}
 
-		public SpanArea isLeadingCell(int row, int col) {
+		public boolean isLeadingCell(int row, int col) {
 			for (SpanArea s : spanAreas) {
 				if (row == s.beginX && col == s.beginY){
-					return s;
+					return true;
 				}
 				else
-					return null;
+					return false;
 			}
-			return null;
+			return false;
 		}
+		
+		
 
 		class SpanArea {
 			int beginX;
@@ -139,7 +193,15 @@ public class Main extends JFrame {
 			public int getCols(){
 				return endX-beginX+1;
 			}
+			
+		    public int[] getLeadingCell(){
+		    	int[] rowAndCol = new int[]{beginX,beginY};
+		    	return rowAndCol;
+		    }
 		}
+		
+		
+		
 
 	}
 
@@ -162,8 +224,12 @@ public class Main extends JFrame {
 				Rectangle cellRect = table.getCellRect(row, col, true);
 				if (cellRect.intersects(clipRect)) {
 					MyTableModel model = (MyTableModel) table.getModel();
-					if (!model.isSpaened(row, col)) {
+					MyTableModel.SpanArea s = model.isSpaened(row, col);
+					if (s==null) {
 						paintCell(row, col, g, cellRect);
+					}
+					else if(model.isLeadingCell(row, col)){
+						paintCell(s.getLeadingCell()[0], s.getLeadingCell()[1], g, ((MyTable)table).getSapnRec(s));
 					}
 
 				}
@@ -183,8 +249,7 @@ public class Main extends JFrame {
 					+ verticalMargin / 2, area.width - horizontalMargin,
 					area.height - verticalMargin);
 
-			if (table.isEditing() && table.getEditingRow() == row
-					&& table.getEditingColumn() == column) {
+			if (table.isEditing() && table.getEditingRow() == row&& table.getEditingColumn() == column) {
 				Component component = table.getEditorComponent();
 				component.setBounds(area);
 				component.validate();
@@ -195,10 +260,39 @@ public class Main extends JFrame {
 				if (component.getParent() == null)
 					rendererPane.add(component);
 				// g.drawString(row+","+column, 0, 0);
+				
 				rendererPane.paintComponent(g, component, table, area.x,
 						area.y, area.width, area.height, true);
 			}
 		}
 	}
+	
+	class MySelectionListner implements ListSelectionListener{
+
+		@Override
+		public void valueChanged(ListSelectionEvent e) {
+						
+		}
+		
+	}
+	
+	class LineNumberRenderer extends JLabel  implements TableCellRenderer {
+		Border unselectedBorder = null;
+		Border selectedBorder = null;
+		boolean isBordered = true;
+
+		public LineNumberRenderer(boolean isBordered) {
+			this.isBordered = isBordered;
+//			setOpaque(true); // MUST do this for background to show up.
+		}
+
+		public Component getTableCellRendererComponent(JTable table, Object content, boolean isSelected, boolean hasFocus, int row, int column) {
+			setBackground(Color.gray);
+			JLabel ren =  new JLabel(content.toString()+"999999");
+			System.out.println(ren.getPreferredSize());
+			return ren;
+		}
+	}
+	
 	
 }
