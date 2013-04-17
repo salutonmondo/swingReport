@@ -33,7 +33,7 @@ class MyTableModel extends AbstractTableModel {
 	public MyTableModel(boolean showLineNumber) {
 		super();
 		this.showLineNumber = showLineNumber;
-		this.addSpan(2, 2, 3, 3);
+//		this.addSpan(2, 2, 2, 3);
 	}
 
 	@Override
@@ -71,8 +71,7 @@ class MyTableModel extends AbstractTableModel {
 		s.beginY = y1;
 		s.endY = y2;
 		spanAreas.add(s);
-		System.out.println("cell1 " + x1 + "," + y1 + " cell2" + x2 + ","
-				+ y2);
+		System.out.println("cell1 " + x1 + "," + y1 + " cell2" + x2 + ","+ y2);
 	}
 
 	public SpanArea isSpaened(int row, int col) {

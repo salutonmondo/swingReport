@@ -5,7 +5,9 @@ import java.awt.Component;
 
 import javax.swing.JLabel;
 import javax.swing.JTable;
+import javax.swing.SwingConstants;
 import javax.swing.border.Border;
+import javax.swing.border.LineBorder;
 import javax.swing.table.TableCellRenderer;
 
 class LineNumberRenderer extends JLabel  implements TableCellRenderer {
@@ -21,7 +23,8 @@ class LineNumberRenderer extends JLabel  implements TableCellRenderer {
 	public Component getTableCellRendererComponent(JTable table, Object content, boolean isSelected, boolean hasFocus, int row, int column) {
 		setBackground(Color.gray);
 		JLabel ren =  new JLabel(content.toString());
-//		System.out.println(ren.getPreferredSize());
+		ren.setBorder(javax.swing.BorderFactory.createEmptyBorder());
+		ren.setHorizontalAlignment(SwingConstants.CENTER );
 		return ren;
 	}
 }
