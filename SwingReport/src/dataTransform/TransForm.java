@@ -31,16 +31,19 @@ public class TransForm {
 
 		ArrayList<Integer> list = new ArrayList<Integer>();
 //		list.add(0);
-		list.add(1);
+//		list.add(1);
 		
 //		list.add(3);
 		ArrayList<Integer> list2 = new ArrayList<Integer>();
 		list2.add(0);
-//		list2.add(3);
+		list2.add(1);
+		list2.add(2);
+		list2.add(3);
 		ArrayList<Integer> list3 = new ArrayList<Integer>();
-		list3.add(3);
-		list3.add(2);
-		
+//		list3.add(3);
+//		list3.add(2);
+//		list3.add(1);
+//		
 		
 		t.addColtems(list);
 		t.addRowItems(list2);
