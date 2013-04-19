@@ -15,7 +15,7 @@ import javax.swing.table.TableColumnModel;
 @SuppressWarnings("serial")
 public class Main extends JFrame {
 	JScrollPane js = new JScrollPane();
-	MyTable jt = new MyTable();
+	MyTable jt ;
 	JButton jb = new JButton("have a test!");
 	BorderLayout bl = new BorderLayout();
 
@@ -28,17 +28,28 @@ public class Main extends JFrame {
 	}
 
 	public void initComponent() {
+		String[] head = new String[] { "月份", "店铺", "销售", "商品" };
+		String[][] data  = new String[][] { { "1", "上海店", "800", "A05" },
+				{ "1", "上海店", "900", "A04" },
+				{ "2", "上海店", "900", "A05" },
+				{ "1", "北京店", "400", "A05" },
+				{ "2", "北京店", "300", "A05" } };
+		
+		jt =  new MyTable(true,head,data);
 		js.setViewportView(jt);
-		TableColumnModel cm = jt.getColumnModel();
-		ColumnGroup g_name = new ColumnGroup("Name");
-		g_name.add(cm.getColumn(1));
-		g_name.add(cm.getColumn(2));
-		ColumnGroup g_lang = new ColumnGroup("Language");
-		g_lang.add(cm.getColumn(3));
-		g_lang.add(cm.getColumn(4));
-		GroupableTableHeader header = (GroupableTableHeader) jt.getTableHeader();
-		header.addColumnGroup(g_name);
-		header.addColumnGroup(g_lang);
+		
+		
+//		TableColumnModel cm = jt.getColumnModel();
+//		ColumnGroup g_name = new ColumnGroup("Name");
+//		g_name.add(cm.getColumn(1));
+//		g_name.add(cm.getColumn(2));
+//		ColumnGroup g_lang = new ColumnGroup("Language");
+//		g_lang.add(cm.getColumn(3));
+//		g_lang.add(cm.getColumn(4));
+//		GroupableTableHeader header = (GroupableTableHeader) jt.getTableHeader();
+//		header.addColumnGroup(g_name);
+//		header.addColumnGroup(g_lang);
+		
 		this.setLayout(bl);
 		this.add(js, BorderLayout.CENTER);
 		JPanel jp = new JPanel();

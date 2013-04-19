@@ -30,8 +30,10 @@ class MyTableModel extends AbstractTableModel {
 				new Boolean(true) },
 		{ "Joe", "Brown", "Pool", new Integer(10), new Boolean(false) } };
 
-	public MyTableModel(boolean showLineNumber) {
+	public MyTableModel(boolean showLineNumber,String[] columnNames,Object[][] data) {
 		super();
+		this.columnNames=columnNames;
+		this.data = data;
 		this.showLineNumber = showLineNumber;
 //		this.addSpan(2, 2, 2, 3);
 	}

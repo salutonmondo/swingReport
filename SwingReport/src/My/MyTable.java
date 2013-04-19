@@ -20,8 +20,8 @@ class MyTable extends JTable {
 	MyTableModel m = (MyTableModel)this.getModel();
 	
 	
-	public MyTable() {
-		super(new MyTableModel(true));
+	public MyTable(boolean showLineNumber,String[] columnNames,Object[][] data) {
+		super(new MyTableModel(true,columnNames,data));
 		/*
 		 * if the table shows line Number then define it's line No column Renderer
 		 */
