@@ -133,4 +133,10 @@ public class ColumnGroup {
       }
     }
   }
+
+public String getText() {
+	return text;
+}
+  
+  
 }

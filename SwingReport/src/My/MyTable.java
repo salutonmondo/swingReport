@@ -10,17 +10,18 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 
 import My.MyTableModel.SpanArea;
+import dataTransform.TransForm;
 
-class MyTable extends JTable {
+public class MyTable extends JTable {
 	/**
 	 * 
 	 */
 	boolean showLineNumbers = true;
 	private static final long serialVersionUID = 1L;
 	MyTableModel m = (MyTableModel)this.getModel();
+	TransForm converter;
 	
-	
-	public MyTable(boolean showLineNumber,String[] columnNames,Object[][] data) {
+	public MyTable(boolean showLineNumber,String[] columnNames,String[][] data) {
 		super(new MyTableModel(true,columnNames,data));
 		/*
 		 * if the table shows line Number then define it's line No column Renderer
@@ -43,6 +44,8 @@ class MyTable extends JTable {
 //			
 //		});
 //		this.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		converter = new TransForm(columnNames,data);
+		updateContent(converter);
 		this.setUI(new MyTableUI());
 
 	}
@@ -105,6 +108,19 @@ class MyTable extends JTable {
 		TableColumn tc = this.getColumnModel().getColumn(0);
 		JLabel jl = (JLabel)tc.getCellRenderer();
 		tc.setMaxWidth((int)jl.getPreferredSize().getWidth()+20);
+	}
+
+	public TransForm getConverter() {
+		return converter;
+	}
+	
+	public void updateContent(TransForm t){
+		GroupableTableHeader header = (GroupableTableHeader) getTableHeader();
+		for(String s :t.getOriHead()){
+			ColumnGroup g = new ColumnGroup(s);
+			header.addColumnGroup(g);
+		}
+		
 	}
 	
 }

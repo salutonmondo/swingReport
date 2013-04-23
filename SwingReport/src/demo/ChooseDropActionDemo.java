@@ -31,10 +31,28 @@ package demo;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */ 
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.datatransfer.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
+
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.DefaultListModel;
+import javax.swing.DropMode;
+import javax.swing.JComponent;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JList;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
+import javax.swing.TransferHandler;
+import javax.swing.UIManager;
 
 public class ChooseDropActionDemo extends JFrame {
     
@@ -60,7 +78,7 @@ public class ChooseDropActionDemo extends JFrame {
         dragFrom = new JList(from);
         dragFrom.setTransferHandler(new FromTransferHandler());
         dragFrom.setPrototypeCellValue("List Item WWWWWW");
-        dragFrom.setDragEnabled(true);
+		dragFrom.setDragEnabled(true);
         dragFrom.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JLabel label = new JLabel("Drag from here:");
         label.setAlignmentX(0f);

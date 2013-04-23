@@ -30,19 +30,19 @@ public class TransForm {
 						{ "2", "±±¾©µê", "300", "A05" } });
 
 		ArrayList<Integer> list = new ArrayList<Integer>();
-//		list.add(0);
+		list.add(0);
 //		list.add(1);
 		
 //		list.add(3);
 		ArrayList<Integer> list2 = new ArrayList<Integer>();
-		list2.add(0);
-		list2.add(1);
-		list2.add(2);
-		list2.add(3);
+//		list2.add(0);
+//		list2.add(1);
+//		list2.add(2);
+//		list2.add(3);
 		ArrayList<Integer> list3 = new ArrayList<Integer>();
-//		list3.add(3);
-//		list3.add(2);
-//		list3.add(1);
+		list3.add(3);
+		list3.add(2);
+		list3.add(1);
 //		
 		
 		t.addColtems(list);
@@ -50,7 +50,7 @@ public class TransForm {
 		t.addDataItems(list3);
 		
 		HeadGroup p = t.construct();
-		t.trans(p);
+//		t.trans(p);
 	}
 
 	public void trans(HeadGroup p) {		
@@ -289,5 +289,14 @@ public class TransForm {
 				this.list.add(target);
 		}
 	}
+
+	public String[] getOriHead() {
+		return oriHead;
+	}
+
+	public String[][] getOriData() {
+		return oriData;
+	}
+	
 	
 }

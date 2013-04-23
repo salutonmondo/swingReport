@@ -8,6 +8,16 @@ package My;
 
 import java.util.*;
 import java.awt.*;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.Transferable;
+import java.awt.dnd.DnDConstants;
+import java.awt.dnd.DragGestureEvent;
+import java.awt.dnd.DragGestureListener;
+import java.awt.dnd.DragSource;
+import java.awt.dnd.DragSourceDragEvent;
+import java.awt.dnd.DragSourceDropEvent;
+import java.awt.dnd.DragSourceEvent;
+import java.awt.dnd.DragSourceListener;
 
 import javax.swing.*;
 import javax.swing.plaf.TableHeaderUI;
@@ -22,14 +32,18 @@ import javax.swing.table.*;
   * @author Nobuo Tamemasa
   */
 
-public class GroupableTableHeader extends JTableHeader {
+public class GroupableTableHeader extends JTableHeader implements DragGestureListener, DragSourceListener{
 //  private static final String uiClassID = "GroupableTableHeaderUI";
-  protected Vector columnGroups = null;
+  public Vector columnGroups = null;
+  DragSource dragSource;
     
   public GroupableTableHeader(TableColumnModel model) {
     super(model);
     setUI(new GroupableTableHeaderUI());
     setReorderingAllowed(false);
+    
+    dragSource = new DragSource();
+    dragSource.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_COPY_OR_MOVE, this);
   }
   
   public void updateUI(){
@@ -74,5 +88,48 @@ public class GroupableTableHeader extends JTableHeader {
       cGroup.setColumnMargin(columnMargin);
     }
   }
+  
+  
+  @Override
+	public void dragEnter(DragSourceDragEvent dsde) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void dragOver(DragSourceDragEvent dsde) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void dropActionChanged(DragSourceDragEvent dsde) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void dragExit(DragSourceEvent dse) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void dragDropEnd(DragSourceDropEvent dsde) {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void dragGestureRecognized(DragGestureEvent evt) {
+		Container c = this.getTable().getParent().getParent();
+		int colNo = this.columnAtPoint(evt.getDragOrigin());
+		ColumnGroup g = (ColumnGroup)columnGroups.get(colNo-1);
+		Transferable t = new StringSelection(colNo+"");
+		if(g.v.size()==0)
+			dragSource.startDrag(evt, DragSource.DefaultCopyDrop, t, this);
+	}
+
+	
   
 }
