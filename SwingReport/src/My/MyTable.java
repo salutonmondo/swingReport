@@ -3,6 +3,9 @@ package My;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.JLabel;
 import javax.swing.JTable;
@@ -11,6 +14,7 @@ import javax.swing.table.TableColumn;
 
 import My.MyTableModel.SpanArea;
 import dataTransform.TransForm;
+import dataTransform.TransForm.HeadGroup;
 
 public class MyTable extends JTable {
 	/**
@@ -20,9 +24,11 @@ public class MyTable extends JTable {
 	private static final long serialVersionUID = 1L;
 	MyTableModel m = (MyTableModel)this.getModel();
 	TransForm converter;
+
 	
-	public MyTable(boolean showLineNumber,String[] columnNames,String[][] data) {
-		super(new MyTableModel(true,columnNames,data));
+	public MyTable(MyTableModel m,TransForm converter) {
+		super(m);
+		this.converter = converter;
 		/*
 		 * if the table shows line Number then define it's line No column Renderer
 		 */
@@ -44,11 +50,11 @@ public class MyTable extends JTable {
 //			
 //		});
 //		this.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		converter = new TransForm(columnNames,data);
+		
 		updateContent(converter);
 		this.setUI(new MyTableUI());
-
 	}
+	
 	
 	public Rectangle getSapnRec(int row,int col,MyTableModel.SpanArea s){
 		if(m.isLeadingCell(row, col))
@@ -116,11 +122,61 @@ public class MyTable extends JTable {
 	
 	public void updateContent(TransForm t){
 		GroupableTableHeader header = (GroupableTableHeader) getTableHeader();
+		
+		ArrayList<Integer> list = new ArrayList<Integer>();
+		list.add(0);
+//		list.add(1);
+		
+//		list.add(3);
+		ArrayList<Integer> list2 = new ArrayList<Integer>();
+//		list2.add(0);
+		list2.add(1);
+//		list2.add(2);
+//		list2.add(3);
+		ArrayList<Integer> list3 = new ArrayList<Integer>();
+		list3.add(3);
+		list3.add(2);
+//		list3.add(1);
+//		list3.add(0);
+//		
+		
+		t.addColtems(list);
+		t.addRowItems(list2);
+		t.addDataItems(list3);
+		
+		t.trans();
+		HeadGroup hg = t.getColG();
+		List<HeadGroup> topList = hg.getNextOne(hg);
+		for(int i=0;i<hg.getHeight();i++){
+			if(topList == null) break;
+			for(HeadGroup h:topList){
+				ColumnGroup cg = new ColumnGroup(h.getValue());
+				if(i==0){
+					header.addColumnGroup(cg);
+				}
+				if(h.getNextOne(h)==null){
+					for(Map.Entry<Integer, Integer> ent:h.getHash2().entrySet()){
+						cg.add(this.getColumnModel().getColumn(ent.getValue()));
+					}
+				}else{
+				for(HeadGroup sub:h.getNextOne(h)){
+					if(sub.getHash2()==null){
+						ColumnGroup tmp = new ColumnGroup(sub.getValue());
+						if(i==0){
+							header.addColumnGroup(cg);
+						}
+						cg.add(tmp);
+					}
+				}
+				}
+			}
+			topList = hg.getNext(topList);
+		}
+		
 		for(String s :t.getOriHead()){
 			ColumnGroup g = new ColumnGroup(s);
 			header.addColumnGroup(g);
 		}
-		
 	}
 	
 }

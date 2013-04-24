@@ -38,6 +38,10 @@ public class CustomPanel extends JPanel implements DropTargetListener{
 	protected DropTarget dropTarget;
 	List<String> items = new ArrayList<String>();
 	JTable table;
+	
+	List<Integer> rowItems = new ArrayList<Integer>();
+	List<Integer> colItems = new ArrayList<Integer>();
+	List<Integer> dataItems = new ArrayList<Integer>();
     public void paint(Graphics g) {
     	super.paint(g);
 //    	normalHue = Color.getHSBColor(hue[0], 0.4f, 0.85f);
@@ -109,13 +113,30 @@ public class CustomPanel extends JPanel implements DropTargetListener{
 		Transferable t = dtde.getTransferable();
 		try {
 			String s = t.getTransferData(DataFlavor.stringFlavor).toString();
-//			System.out.println(s);
+			int colNo = Integer.parseInt(s)-1;
 			this.areaName = "complete";
-			
 			GroupableTableHeader head = (GroupableTableHeader)table.getTableHeader();
 			Vector v = head.columnGroups;
-			ColumnGroup g = (ColumnGroup) v.get(Integer.parseInt(s)-1);
+			ColumnGroup g = (ColumnGroup) v.get(colNo);
 			JLabel newItem = new JLabel(g.getText());
+			// apply transform
+			TransForm converter = ((MyTable)table).getConverter();
+			if(areaName.equals("Column")){
+				colItems.add(colNo);
+				converter.addColtems(colItems);
+			}
+			if(areaName.equals("Row")){
+				rowItems.add(colNo);
+				converter.addColtems(rowItems);
+			}
+			if(areaName.equals("Data")){
+				dataItems.add(colNo);
+				converter.addColtems(colItems);
+			}
+			
+			/*
+			 * remove the label by double click;
+			 */
 			newItem.addMouseListener(new MouseAdapter(){
 				@Override
 				public void mouseClicked(MouseEvent e) {
@@ -127,7 +148,6 @@ public class CustomPanel extends JPanel implements DropTargetListener{
 					}
 					super.mouseClicked(e);
 				}
-				
 			});
 			this.add(newItem);
 			this.updateUI();
@@ -138,8 +158,7 @@ public class CustomPanel extends JPanel implements DropTargetListener{
 			e.printStackTrace();
 		}
 		
-		// apply transform
-		TransForm converter = ((MyTable)table).getConverter();
+		
 		
 		dtde.acceptDrop(DnDConstants.ACTION_COPY_OR_MOVE);
 		dtde.dropComplete(true);

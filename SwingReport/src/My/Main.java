@@ -12,6 +12,10 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
+
+import dataTransform.TransForm;
 
 import My.dragPanel.CustomPanel;
 
@@ -39,10 +43,15 @@ public class Main extends JFrame {
 				{ "2", "上海店", "900", "A05" },
 				{ "1", "北京店", "400", "A05" },
 				{ "2", "北京店", "300", "A05" } };
-		
-		jt =  new MyTable(true,head,data);
+		TransForm converter = new TransForm(head,data);
+		MyTableModel model = new MyTableModel(false,head,data);
+		jt =  new MyTable(model,converter);
 		js.setViewportView(jt);
 		
+		
+		
+		converter.trans();
+		MyTableModel m = new MyTableModel(true,converter.getResultHead(),converter.getResultsData());
 		
 //		TableColumnModel cm = jt.getColumnModel();
 //		ColumnGroup g_name = new ColumnGroup("Name");
@@ -54,6 +63,8 @@ public class Main extends JFrame {
 //		GroupableTableHeader header = (GroupableTableHeader) jt.getTableHeader();
 //		header.addColumnGroup(g_name);
 //		header.addColumnGroup(g_lang);
+//		TableColumn t;
+		
 		
 		this.setLayout(bl);
 		this.add(js, BorderLayout.CENTER);
