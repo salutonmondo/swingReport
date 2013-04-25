@@ -28,6 +28,7 @@ import javax.swing.JTable;
 import My.ColumnGroup;
 import My.GroupableTableHeader;
 import My.MyTable;
+import My.MyTableModel;
 import dataTransform.TransForm;
 
 public class CustomPanel extends JPanel implements DropTargetListener{
@@ -39,9 +40,6 @@ public class CustomPanel extends JPanel implements DropTargetListener{
 	List<String> items = new ArrayList<String>();
 	JTable table;
 	
-	List<Integer> rowItems = new ArrayList<Integer>();
-	List<Integer> colItems = new ArrayList<Integer>();
-	List<Integer> dataItems = new ArrayList<Integer>();
     public void paint(Graphics g) {
     	super.paint(g);
 //    	normalHue = Color.getHSBColor(hue[0], 0.4f, 0.85f);
@@ -113,8 +111,9 @@ public class CustomPanel extends JPanel implements DropTargetListener{
 		Transferable t = dtde.getTransferable();
 		try {
 			String s = t.getTransferData(DataFlavor.stringFlavor).toString();
-			int colNo = Integer.parseInt(s)-1;
-			this.areaName = "complete";
+			boolean isShowLineNo = ((MyTableModel)table.getModel()).isShowLineNumber();
+			
+			int colNo = isShowLineNo?Integer.parseInt(s)-1:Integer.parseInt(s);
 			GroupableTableHeader head = (GroupableTableHeader)table.getTableHeader();
 			Vector v = head.columnGroups;
 			ColumnGroup g = (ColumnGroup) v.get(colNo);
@@ -122,17 +121,22 @@ public class CustomPanel extends JPanel implements DropTargetListener{
 			// apply transform
 			TransForm converter = ((MyTable)table).getConverter();
 			if(areaName.equals("Column")){
-				colItems.add(colNo);
-				converter.addColtems(colItems);
+				converter.getColItem().add(colNo);
+				deletItems(converter.getRowItem(),colNo	);
+				deletItems(converter.getDataItem(),colNo	);
 			}
 			if(areaName.equals("Row")){
-				rowItems.add(colNo);
-				converter.addColtems(rowItems);
+				converter.getRowItem().add(colNo);
+				deletItems(converter.getDataItem(),colNo	);
+				deletItems(converter.getColItem(),colNo	);
 			}
 			if(areaName.equals("Data")){
-				dataItems.add(colNo);
-				converter.addColtems(colItems);
+				converter.getDataItem().add(colNo);
+				deletItems(converter.getRowItem(),colNo	);
+				deletItems(converter.getColItem(),colNo	);
 			}
+			
+			((MyTable)table).updateContent(converter);
 			
 			/*
 			 * remove the label by double click;
@@ -166,6 +170,13 @@ public class CustomPanel extends JPanel implements DropTargetListener{
 
 	public void act(String s){
 		items.add(s);
+	}
+	
+	public void deletItems(List<Integer> list,int item){
+		for(int i=0;i<list.size();i++){
+			if(list.get(i)==item)
+				list.remove(i);
+		}
 	}
 	
 }

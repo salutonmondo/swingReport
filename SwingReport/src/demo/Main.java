@@ -1,7 +1,6 @@
 package demo;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.datatransfer.StringSelection;
 import java.awt.datatransfer.Transferable;
@@ -16,6 +15,7 @@ import java.awt.dnd.DragSourceListener;
 
 import javax.swing.JComponent;
 import javax.swing.JFrame;
+import javax.swing.JTable;
 
 import My.dragPanel.CustomPanel;
 
@@ -26,7 +26,7 @@ public class Main {
 
     JFrame f = new JFrame();
     f.add(BorderLayout.NORTH,com);
-    CustomPanel jp = new CustomPanel("target",new Dimension(300,150));
+    CustomPanel jp = new CustomPanel(new JTable(),"target",new Dimension(300,150));
     f.add(BorderLayout.CENTER,jp);
     f.setSize(300, 300);
     f.setVisible(true);

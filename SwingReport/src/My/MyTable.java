@@ -3,7 +3,7 @@ package My;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +39,16 @@ public class MyTable extends JTable {
 		}
 		this.setRowSelectionAllowed(false);
 		this.getTableHeader().setReorderingAllowed(false);
+		
+		
+//		GroupableTableHeader header = (GroupableTableHeader) getTableHeader();	
+//		ColumnGroup test = new ColumnGroup("test");
+//		test.add(this.getColumnModel().getColumn(0));
+//		test.add(this.getColumnModel().getColumn(1));
+//		header.addColumnGroup(test);
+//		this.setTableHeader(header);
+		
+		
 //		this.addMouseListener(new MouseAdapter(){
 //
 //			@Override
@@ -121,61 +131,45 @@ public class MyTable extends JTable {
 	}
 	
 	public void updateContent(TransForm t){
-		GroupableTableHeader header = (GroupableTableHeader) getTableHeader();
-		
-		ArrayList<Integer> list = new ArrayList<Integer>();
-		list.add(0);
-//		list.add(1);
-		
-//		list.add(3);
-		ArrayList<Integer> list2 = new ArrayList<Integer>();
-//		list2.add(0);
-		list2.add(1);
-//		list2.add(2);
-//		list2.add(3);
-		ArrayList<Integer> list3 = new ArrayList<Integer>();
-		list3.add(3);
-		list3.add(2);
-//		list3.add(1);
-//		list3.add(0);
-//		
-		
-		t.addColtems(list);
-		t.addRowItems(list2);
-		t.addDataItems(list3);
-		
 		t.trans();
+		m = new MyTableModel(false,t.getResultHead(),t.getResultsData());
+		this.setModel(m);
+		GroupableTableHeader header = (GroupableTableHeader) getTableHeader();	
 		HeadGroup hg = t.getColG();
+		if (hg == null) {
+			for (String s : t.getResultHead()) {
+				ColumnGroup g = new ColumnGroup(s);
+				header.addColumnGroup(g);
+			}
+			return;
+		}
 		List<HeadGroup> topList = hg.getNextOne(hg);
+		Map<String,ColumnGroup> map = new HashMap<String,ColumnGroup>();
 		for(int i=0;i<hg.getHeight();i++){
+			Map<String,ColumnGroup> map2 = new HashMap<String,ColumnGroup>();
 			if(topList == null) break;
 			for(HeadGroup h:topList){
 				ColumnGroup cg = new ColumnGroup(h.getValue());
 				if(i==0){
 					header.addColumnGroup(cg);
+					map.put(cg.getText(), cg);
+					map2.put(cg.getText(), cg);
+				}else{
+					ColumnGroup parentCol = map.get(h.getParentName());
+					parentCol.add(cg);
+					map2.put(cg.getText(), cg);
 				}
 				if(h.getNextOne(h)==null){
 					for(Map.Entry<Integer, Integer> ent:h.getHash2().entrySet()){
 						cg.add(this.getColumnModel().getColumn(ent.getValue()));
 					}
 				}else{
-				for(HeadGroup sub:h.getNextOne(h)){
-					if(sub.getHash2()==null){
-						ColumnGroup tmp = new ColumnGroup(sub.getValue());
-						if(i==0){
-							header.addColumnGroup(cg);
-						}
-						cg.add(tmp);
-					}
+
 				}
-				}
+				
 			}
+			map = map2;	
 			topList = hg.getNext(topList);
-		}
-		
-		for(String s :t.getOriHead()){
-			ColumnGroup g = new ColumnGroup(s);
-			header.addColumnGroup(g);
 		}
 	}
 	

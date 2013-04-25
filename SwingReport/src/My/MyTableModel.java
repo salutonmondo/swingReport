@@ -7,7 +7,7 @@ import javax.swing.table.AbstractTableModel;
 
 
 
-class MyTableModel extends AbstractTableModel {
+public class MyTableModel extends AbstractTableModel {
 	boolean showLineNumber;
 	List<SpanArea> spanAreas = new ArrayList<SpanArea>();
 	private String[] columnNames = { "First Name", "Last Name", "Sport",
@@ -118,6 +118,12 @@ class MyTableModel extends AbstractTableModel {
 	    	int[] rowAndCol = new int[]{beginX,beginY};
 	    	return rowAndCol;
 	    }
+	}
+
+
+
+	public boolean isShowLineNumber() {
+		return showLineNumber;
 	}
 	
 	

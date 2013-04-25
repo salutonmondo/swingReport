@@ -31,28 +31,36 @@ public class TransForm {
 						{ "2", "±±¾©µê", "300", "A05" }});
 
 		ArrayList<Integer> list = new ArrayList<Integer>();
-		list.add(0);
-//		list.add(1);
+//		list.add(0);
+		list.add(1);
 		
-//		list.add(3);
+		list.add(3);
 		ArrayList<Integer> list2 = new ArrayList<Integer>();
-//		list2.add(0);
-		list2.add(1);
+		list2.add(0);
+//		list2.add(1);
 //		list2.add(2);
 //		list2.add(3);
 		ArrayList<Integer> list3 = new ArrayList<Integer>();
-		list3.add(3);
+//		list3.add(3);
 		list3.add(2);
 //		list3.add(1);
 //		list3.add(0);
 //		
 		
-		t.addColtems(list);
-		t.addRowItems(list2);
-		t.addDataItems(list3);
+		t.setColtems(list);
+		t.setRowItem(list2);
+		t.setDataItem(list3);
 		
 //		t.construct(list);
 		t.trans();
+		
+		for(String s:t.resultHead){
+			System.out.print(s+"\t");
+		}
+		
+		System.out.println();
+		System.out.println();
+		
 		for(int i=0;i<t.resultsData.length;i++){
 			for(int j=0;j<t.resultsData[i].length;j++){
 				System.out.print(t.resultsData[i][j]+"\t");
@@ -61,9 +69,15 @@ public class TransForm {
 		}
 	}
 
+	private void setColtems(ArrayList<Integer> list) {
+		this.colItem = list;
+		
+	}
+
 	public void trans() {
-		if(colItem.size()+rowItem.size()==0){
+		if(colItem.size()==0||rowItem.size()==0){
 			this.resultsData = this.oriData;
+			this.resultHead = this.oriHead;
 			return ;
 		}
 		colG = construct(colItem,0);
@@ -169,12 +183,14 @@ public class TransForm {
 			int resultArrayPosition0 = 0;
 			int resultArrayPosition1 = 0;
 			root.degree = last.size();
-			this.resultHead = new String[root.degree*dataItem.size()];
+			if(type==0)
+				this.resultHead = new String[root.degree*dataItem.size()];
 			for(HeadGroup p5:last){
 				for(int position:this.dataItem){
 					int[] pos = new int[]{position,type==0?resultArrayPosition0:resultArrayPosition1};
 					p5.addSelf(pos);
-					this.resultHead[resultArrayPosition0] = this.oriHead[position];
+					if(type==0)
+						this.resultHead[resultArrayPosition0] = this.oriHead[position];
 					resultArrayPosition0++;
 				}
 				resultArrayPosition1++;
@@ -184,14 +200,14 @@ public class TransForm {
 		/*
 		 * for test only
 		 */
-		for(HeadGroup p:root.list){
-			System.out.println(p);
-		}
+//		for(HeadGroup p:root.list){
+//			System.out.println(p);
+//		}
 		System.out.println("the degree of the group is: "+root.degree+"  height of the group is:"+root.height);
 		System.out.println("thre result head is: ");
-		for(String s:this.resultHead){
-			System.out.print(s+"\t");
-		}
+//		for(String s:this.resultHead){
+//			System.out.print(s+"\t");
+//		}
 		return root;
 	}
 
@@ -210,12 +226,15 @@ public class TransForm {
 	public TransForm(String[] oriHead, String[][] oriData) {
 		this.oriData = oriData;
 		this.oriHead = oriHead;
-		
+		for(int i=0;i<oriHead.length;i++){
+			this.dataItem.add(i);
+		}
 	}
 
 	public class HeadGroup {
 		LinkedHashMap<String, HeadGroup> hash = null;
 		String value;
+		String parentName;
 		LinkedHashMap<Integer, Integer> hash2 = null;
         List<HeadGroup> list = new ArrayList<HeadGroup>();
         int degree = 0;
@@ -230,9 +249,20 @@ public class TransForm {
 				if (hash == null)
 					hash = new LinkedHashMap<String, HeadGroup>();
 				HeadGroup g = (HeadGroup) obj;
+				g.setParentName(this.value);
 				hash.put(g.getValue(), g);
 			}
 		}
+
+		
+		public String getParentName() {
+			return parentName;
+		}
+
+		public void setParentName(String parentName) {
+			this.parentName = parentName;
+		}
+
 
 		public String getValue() {
 			return value;
@@ -257,18 +287,13 @@ public class TransForm {
 
 		public void next(HeadGroup p) {
 			if (p.hash != null) {
-//				System.out.println(p.value);
 				list.add(p);
 				for (Map.Entry<String, HeadGroup> ent : p.hash.entrySet()) {
 					next(ent.getValue());
 				}
 			}
 			else{
-//				System.out.println(p.value);
 				list.add(p);
-//				if(!p.value.equals("root")){
-//					degree = p.hash2.size()+degree;
-//				}
 			}
 		}
 
@@ -312,55 +337,6 @@ public class TransForm {
 			return nextList;
 		}
 	}
-	
-	class ColItemWrapper {
-		HashMap<String,Integer> map = new HashMap<String,Integer>();
-		ArrayList<String[]> list= new ArrayList<String[]>();
-		String[] rowItems;
-		HeadGroup p;
-		int count;
-		int length ;
-		int height=0;
-		public ColItemWrapper(String[] rowItems,int length,String colItemName,HeadGroup p,String[] dataArray){
-		    this.length = length;
-			map.put(colItemName, 1);
-			count = 1;
-			this.p = p;
-			fillArray(null,dataArray);
-			this.rowItems = rowItems;
-		} 
-		public void add(String colItemName,String[] dataArray){
-	        int itemCount = map.get(colItemName)==null?-1:map.get(colItemName);
-			if(itemCount<count){
-				String[] target = list.get(itemCount+1);
-				fillArray(target,dataArray);
-			}
-			if(itemCount==count){
-				count++;
-				fillArray(null,dataArray);
-			}
-		}
-		
-		public void fillArray(String[] target,String[] dataArray){
-			boolean shouldAdd= false;
-			if(target==null){
-				target = new String[this.length];
-				shouldAdd = true;
-			}
-			for(int colIndex =0;colIndex<colItem.size();colIndex++){
-				String lookKey = dataArray[colItem.get(colIndex)];
-				HeadGroup tmpGroup = p.hash.get(lookKey);
-				if(tmpGroup.hash==null){
-					for(Map.Entry<Integer, Integer> ent:tmpGroup.hash2.entrySet()){
-						target[ent.getValue()] =dataArray[ent.getKey()];
-//						System.out.println(dataArray[ent.getKey()]);
-					}
-				}
-			}
-			if(shouldAdd)
-				this.list.add(target);
-		}
-	}
 
 	public String[] getOriHead() {
 		return oriHead;
@@ -393,6 +369,31 @@ public class TransForm {
 	public String[][] getResultsData() {
 		return resultsData;
 	}
+
+	public ArrayList<Integer> getRowItem() {
+		return rowItem;
+	}
+
+	public void setRowItem(ArrayList<Integer> rowItem) {
+		this.rowItem = rowItem;
+	}
+
+	public ArrayList<Integer> getColItem() {
+		return colItem;
+	}
+
+	public void setColItem(ArrayList<Integer> colItem) {
+		this.colItem = colItem;
+	}
+
+	public ArrayList<Integer> getDataItem() {
+		return dataItem;
+	}
+
+	public void setDataItem(ArrayList<Integer> dataItem) {
+		this.dataItem = dataItem;
+	}
+	
 	
 	
 }
