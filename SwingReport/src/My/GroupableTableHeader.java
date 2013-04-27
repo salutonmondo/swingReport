@@ -36,7 +36,7 @@ public class GroupableTableHeader extends JTableHeader implements DragGestureLis
 //  private static final String uiClassID = "GroupableTableHeaderUI";
   public Vector columnGroups = null;
   DragSource dragSource;
-    
+  public boolean isAdded = false;
   public GroupableTableHeader(TableColumnModel model) {
     super(model);
     setUI(new GroupableTableHeaderUI());

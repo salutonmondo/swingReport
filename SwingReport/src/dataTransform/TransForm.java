@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
@@ -20,7 +21,7 @@ public class TransForm {
 	HeadGroup rowG;
 	HeadGroup colG;
 	int columnSetLength;
-	
+	List<String> headList = new ArrayList<String>();
 
 	public static void main(String args[]) {
 		TransForm t = new TransForm(new String[] { "月份", "店铺", "销售", "商品" },
@@ -28,15 +29,17 @@ public class TransForm {
 						{ "1", "上海店", "900", "A04" },
 						{ "2", "上海店", "900", "A05" },
 						{ "1", "北京店", "400", "A05" },
-						{ "2", "北京店", "300", "A05" }});
+						{ "2", "北京店", "300", "A05" },
+						{ "3", "北京店", "700", "A05" }});
 
 		ArrayList<Integer> list = new ArrayList<Integer>();
-//		list.add(0);
+		list.add(0);
 		list.add(1);
 		
-		list.add(3);
+		
+//		list.add(3);
 		ArrayList<Integer> list2 = new ArrayList<Integer>();
-		list2.add(0);
+		list2.add(3);
 //		list2.add(1);
 //		list2.add(2);
 //		list2.add(3);
@@ -51,16 +54,17 @@ public class TransForm {
 		t.setRowItem(list2);
 		t.setDataItem(list3);
 		
-//		t.construct(list);
+//		t.construct(list2, 0);
+//		t.construct2(list2,0);
 		t.trans();
 		
 		for(String s:t.resultHead){
 			System.out.print(s+"\t");
 		}
-		
+////		
+//		System.out.println();
 		System.out.println();
-		System.out.println();
-		
+//		
 		for(int i=0;i<t.resultsData.length;i++){
 			for(int j=0;j<t.resultsData[i].length;j++){
 				System.out.print(t.resultsData[i][j]+"\t");
@@ -80,12 +84,12 @@ public class TransForm {
 			this.resultHead = this.oriHead;
 			return ;
 		}
-		colG = construct(colItem,0);
-		rowG = construct(rowItem,1);
-		resultsData = new String[rowG.degree][colG.degree*this.dataItem.size()];
+		colG = construct2(colItem,0);
+		rowG = construct2(rowItem,1);
+		resultsData = new String[rowG.degree][colG.degree];
 		String[] rowNavi = new String[rowG.height];
+		int lastRowIndex = this.rowItem.get(this.rowItem.size()-1);
 		String[] colNavi = new String[colG.height];
-		String[] dataNavi = new String[this.dataItem.size()];
 		for(int k=0;k<this.oriData.length;k++){
 			
 			int rowCount = 0;
@@ -107,9 +111,9 @@ public class TransForm {
 				int index = this.dataItem.get(h);
 				String content = this.oriData[k][index];
 				for(String nar:rowNavi){
-					tem = tem.hash.get(nar);
+					tem = tem.hash.get(nar);					
 					if(tem.hash2!=null){
-						r = tem.hash2.get(index);
+						r = tem.hash2.get(lastRowIndex);
 					}
 					
 				}
@@ -126,91 +130,88 @@ public class TransForm {
 		}		
 	}
 	
-
-
-	public HeadGroup construct(List<Integer> items,int type) {
-		LinkedHashMap<Integer, TreeSet<String>> hash = new LinkedHashMap<Integer, TreeSet<String>>();
+	public HeadGroup construct2(List<Integer> items,int type) {
+		HashSet<String> navSet = new HashSet<String>();
 		HeadGroup root = new HeadGroup("root");
-		if(items.size()==0){
-			for(int i=0;i<dataItem.size();i++){
-				int[] temp = new int[]{dataItem.get(i),i};
-				root.addSelf(temp);
+		root.hash = new LinkedHashMap<String,HeadGroup>();
+		int resultIndex = 0;
+		int degree = 0;
+		boolean heightCaculated = false;
+		int height = 0;
+		int lastRowIndex = items.get(items.size()-1);
+		
+		for(String[] s:this.oriData){
+			StringBuilder sb = new StringBuilder();
+			for(int row:items){
+				sb.append(s[row]);
 			}
-		}
-		else{
-			for (int c : items) {
-				TreeSet<String> set = new TreeSet<String>();
-				hash.put(c, set);
-			}
-
-			for (int i = 0; i < oriData.length; i++) {
-				for (Map.Entry<Integer, TreeSet<String>> ent : hash.entrySet()) {
-					ent.getValue().add(oriData[i][ent.getKey()]);
-				}
-			}
-
-			/*
-			 * for test only
-			 */
-			for (Map.Entry<Integer, TreeSet<String>> ent : hash.entrySet()) {
-				System.out.println(ent.getKey() + "____" + ent.getValue());
-			}
-
-			List<HeadGroup> last = new ArrayList<HeadGroup>();
 			
-			for (Map.Entry<Integer, TreeSet<String>> ent : hash.entrySet()) {
-				TreeSet<String> set = ent.getValue();
-				if (last.size() == 0) {
-					for (String s : set) {
-						HeadGroup p = new HeadGroup(s);
-						last.add(p);
-						root.addSelf(p);
+//			System.out.println(sb);
+			if(navSet.add(sb.toString())){
+				HeadGroup parent = root;
+				int count =0;
+				for(int row:items){
+					count++;
+					HeadGroup sub = new HeadGroup(s[row]);
+					if(parent.hash ==null)
+						parent.setHash(new LinkedHashMap<String,HeadGroup>());
+					if(parent.hash.get(sub.getValue())==null){
+						parent.addSelf(sub);
+						if(!heightCaculated)
+							height++;
+						parent = parent.hash.get(sub.getValue());
 					}
-				} else {
-					List<HeadGroup> tmp = new ArrayList<HeadGroup>();
-					for (HeadGroup p2 : last) {
-						for (String s2 : set) {
-							HeadGroup p3 = new HeadGroup(s2);
-							p2.addSelf(p3);
-							tmp.add(p3);
+					else{
+						parent = parent.hash.get(sub.getValue());
+//						continue;
+					}
+					
+					//the last group add data item
+					if (count == items.size()) {
+						if (type == 0) {
+							for (int dataIndex : this.dataItem) {
+								if (sub.hash2 == null)
+									sub.hash2 = new LinkedHashMap<Integer, Integer>();
+								sub.hash2.put(dataIndex,resultIndex);
+								this.headList.add(this.oriHead[dataIndex]);
+								resultIndex++;
+								degree++;
+							}
+						} else {
+							if (sub.hash2 == null)
+								sub.hash2 = new LinkedHashMap<Integer, Integer>();
+							sub.hash2.put(lastRowIndex,resultIndex);
+							resultIndex++;
+							degree++;
 						}
 					}
-					last = tmp;
-					tmp = null;
+					
 				}
-			}
-			root.height = hash.size();
-			int resultArrayPosition0 = 0;
-			int resultArrayPosition1 = 0;
-			root.degree = last.size();
-			if(type==0)
-				this.resultHead = new String[root.degree*dataItem.size()];
-			for(HeadGroup p5:last){
-				for(int position:this.dataItem){
-					int[] pos = new int[]{position,type==0?resultArrayPosition0:resultArrayPosition1};
-					p5.addSelf(pos);
-					if(type==0)
-						this.resultHead[resultArrayPosition0] = this.oriHead[position];
-					resultArrayPosition0++;
-				}
-				resultArrayPosition1++;
+			};
+			
+			heightCaculated = true;
+		}
+		
+		root.next(root);
+		root.degree = degree;
+		root.height = height;
+		System.out.println("the height is "+root.height+" the degree is "+root.degree);
+		for(HeadGroup p:root.list){
+			System.out.println(p);
+		}
+////		
+		if(type==0){
+			this.resultHead = new String[degree];
+			for(int i = 0;i<this.headList.size();i++){
+				this.resultHead[i] = this.headList.get(i);
 			}
 		}
-		root.next(root);
-		/*
-		 * for test only
-		 */
-//		for(HeadGroup p:root.list){
-//			System.out.println(p);
-//		}
-		System.out.println("the degree of the group is: "+root.degree+"  height of the group is:"+root.height);
-		System.out.println("thre result head is: ");
-//		for(String s:this.resultHead){
-//			System.out.print(s+"\t");
-//		}
 		return root;
 	}
+	
+	
 
+	
 	public void addRowItems(List<Integer> rowList) {
 		rowItem.addAll(rowList);
 	}
@@ -237,6 +238,7 @@ public class TransForm {
 		String parentName;
 		LinkedHashMap<Integer, Integer> hash2 = null;
         List<HeadGroup> list = new ArrayList<HeadGroup>();
+        HeadGroup parent;
         int degree = 0;
         int height=0;
 		public void addSelf(Object obj) {
@@ -249,7 +251,7 @@ public class TransForm {
 				if (hash == null)
 					hash = new LinkedHashMap<String, HeadGroup>();
 				HeadGroup g = (HeadGroup) obj;
-				g.setParentName(this.value);
+				g.setParent(this);
 				hash.put(g.getValue(), g);
 			}
 		}
@@ -280,6 +282,16 @@ public class TransForm {
 		public LinkedHashMap<String, HeadGroup> getHash() {
 			return hash;
 		}
+		
+		public void setHash(LinkedHashMap<String, HeadGroup> hash) {
+			this.hash = hash;
+		}
+
+
+		public void setHash2(LinkedHashMap<Integer, Integer> hash2) {
+			this.hash2 = hash2;
+		}
+
 
 		public LinkedHashMap<Integer, Integer> getHash2() {
 			return hash2;
@@ -291,8 +303,7 @@ public class TransForm {
 				for (Map.Entry<String, HeadGroup> ent : p.hash.entrySet()) {
 					next(ent.getValue());
 				}
-			}
-			else{
+			} else {
 				list.add(p);
 			}
 		}
@@ -336,6 +347,18 @@ public class TransForm {
 			}
 			return nextList;
 		}
+
+
+		public HeadGroup getParent() {
+			return parent;
+		}
+
+
+		public void setParent(HeadGroup parent) {
+			this.parent = parent;
+		}
+		
+		
 	}
 
 	public String[] getOriHead() {
@@ -392,6 +415,11 @@ public class TransForm {
 
 	public void setDataItem(ArrayList<Integer> dataItem) {
 		this.dataItem = dataItem;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return false;
 	}
 	
 	

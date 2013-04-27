@@ -3,7 +3,9 @@ package My;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -63,6 +65,10 @@ public class MyTable extends JTable {
 		
 		updateContent(converter);
 		this.setUI(new MyTableUI());
+	}
+	
+	public MyTable(MyTableModel m){
+		super(m);
 	}
 	
 	
@@ -144,33 +150,91 @@ public class MyTable extends JTable {
 			return;
 		}
 		List<HeadGroup> topList = hg.getNextOne(hg);
-		Map<String,ColumnGroup> map = new HashMap<String,ColumnGroup>();
-		for(int i=0;i<hg.getHeight();i++){
-			Map<String,ColumnGroup> map2 = new HashMap<String,ColumnGroup>();
-			if(topList == null) break;
-			for(HeadGroup h:topList){
-				ColumnGroup cg = new ColumnGroup(h.getValue());
-				if(i==0){
-					header.addColumnGroup(cg);
-					map.put(cg.getText(), cg);
-					map2.put(cg.getText(), cg);
-				}else{
-					ColumnGroup parentCol = map.get(h.getParentName());
-					parentCol.add(cg);
-					map2.put(cg.getText(), cg);
-				}
-				if(h.getNextOne(h)==null){
-					for(Map.Entry<Integer, Integer> ent:h.getHash2().entrySet()){
-						cg.add(this.getColumnModel().getColumn(ent.getValue()));
-					}
-				}else{
-
-				}
-				
-			}
-			map = map2;	
-			topList = hg.getNext(topList);
-		}
+		List<HeadGroup> lastHeadGroups = new ArrayList<HeadGroup>();
+		HashMap<String,ColumnGroup> lastColumnGroups = new HashMap<String,ColumnGroup>();
+		HashMap<String,ColumnGroup> tmpLastColumnGroups = new HashMap<String,ColumnGroup>();
+		lastHeadGroups.add(hg);	
+		int count=0;
+		boolean fist = true;
+		this.buildHeader(header, topList);
+//		for(HeadGroup p:topList){
+//			count++;
+//			if(fist){
+//				ColumnGroup cg = new ColumnGroup(p.getValue());
+//				header.addColumnGroup(cg);
+//				lastColumnGroups.put(cg.text, cg);
+//				tmpLastColumnGroups.put(cg.text, cg);
+//			}
+//			else{
+//				StringBuilder sb = new StringBuilder();
+//				while(!p.getParent().getValue().equals("root")){
+//					sb.append(p.getParent().getValue());
+//				}
+//				sb.append(p.getValue());
+//				ColumnGroup parent = lastColumnGroups.get(sb.toString());
+//				ColumnGroup sub = new ColumnGroup(p.getValue());
+//				System.out.println("3:"+sb.toString());
+//				parent.add(sub);
+//				if(p.getHash2()!=null){
+//					for(Map.Entry<Integer, Integer> ent :p.getHash2().entrySet()){
+//						ColumnGroup cg = new ColumnGroup(this.getColumnName(ent.getKey()));
+//						System.out.println("1:"+cg.text);
+//						sub.add(cg);
+//					}
+//				}
+//				sb.append(sub.text);
+//				tmpLastColumnGroups.put(sb.toString(), sub);
+//			}
+//			if(count==topList.size()){
+//				fist = false;
+//				topList = p.getNext(topList);
+//				if(topList==null)
+//					break;
+//				lastColumnGroups = tmpLastColumnGroups;
+//				continue;
+//			}
+//		}
 	}
-	
+
+	public void buildHeader(GroupableTableHeader header, List<HeadGroup> topList) {
+		HashMap<String, ColumnGroup> lastColumnGroups = new HashMap<String, ColumnGroup>();
+		HashMap<String, ColumnGroup> tmpLastColumnGroups = new HashMap<String, ColumnGroup>();
+		for (HeadGroup p : topList) {
+			if (!header.isAdded) {
+				ColumnGroup cg = new ColumnGroup(p.getValue());
+				header.addColumnGroup(cg);
+				lastColumnGroups.put(cg.text, cg);
+				tmpLastColumnGroups.put(cg.text, cg);
+			} else {
+				StringBuilder sb = new StringBuilder();
+				HeadGroup tmp = p;
+				while (!p.getParent().getValue().equals("root")) {
+					sb.append(p.getParent().getValue());
+					p=p.getParent();
+				}
+				sb.append(p.getValue());
+				ColumnGroup parent = lastColumnGroups.get(sb.toString());
+				p = tmp;
+				ColumnGroup sub = new ColumnGroup(p.getValue());
+				System.out.println("3:" + sb.toString());
+				parent.add(sub);
+				if (p.getHash2() != null) {
+					for (Map.Entry<Integer, Integer> ent : p.getHash2()
+							.entrySet()) {
+						ColumnGroup cg = new ColumnGroup(this.getColumnName(ent
+								.getKey()));
+						System.out.println("1:" + cg.text);
+						sub.add(cg);
+					}
+				}
+				sb.append(sub.text);
+				tmpLastColumnGroups.put(sb.toString(), sub);
+			}
+			if(p.getHash2()!=null)
+				return ;
+		}
+		header.isAdded = true;
+		List<HeadGroup> nextList = topList.get(0).getNext(topList);
+		buildHeader(header,nextList);
+	}
 }
