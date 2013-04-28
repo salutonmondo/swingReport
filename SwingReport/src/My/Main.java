@@ -5,8 +5,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.util.HashMap;
-import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -16,13 +14,9 @@ import javax.swing.JTable;
 import javax.swing.JViewport;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.table.TableColumn;
-import javax.swing.table.TableColumnModel;
-
-
-import dataTransform.TransForm;
 
 import My.dragPanel.CustomPanel;
+import dataTransform.TransForm;
 
 
 @SuppressWarnings("serial")
@@ -42,37 +36,22 @@ public class Main extends JFrame {
 	}
 
 	public void initComponent() {
-		String[] fixHead = new String[] { ""};
-		String[][] fixData  = new String[][] { { "dd"},
-				{ "v" },
-				{ "x"},
-				{ "1"},
-				{ "2"} };
-		
-		String[][] data = new String[][] { { "1","上海店", "800", "A05" },
-				{ "1", "上海店", "900", "A04" },
-				{ "2", "上海店", "900", "A05" },
-				{ "1", "北京店", "400", "A05" },
-				{ "2", "北京店", "300", "A05" },
-				{ "3", "北京店", "700", "A05" }};
+		String[][] data = new String[][] { { "1", "上海店", "800", "A05" },
+				{ "1", "上海店", "900", "A04" }, { "2", "上海店", "900", "A05" },
+				{ "1", "北京店", "400", "A05" }, { "2", "北京店", "300", "A05" },
+				{ "3", "北京店", "700", "A05" } };
 		String[] head = new String[] { "月份", "店铺", "销售", "商品" };
-		
-		TransForm converter = new TransForm(head,data);
-		MyTableModel model = new MyTableModel(false,head,data);
-		jt =  new MyTable(model,converter);
-		js = new JScrollPane(jt);
-		
-		MyTableModel fixModel = new MyTableModel(false,fixHead,fixData);
-		MyTable fixTable = new MyTable(fixModel);
-		fixTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-//		fixTable.setDefaultRenderer(Object.class, new RowHeaderRenderer(fixedTable));
-		fixTable.setGridColor(jt.getTableHeader().getBackground());
-		  
-		 JViewport viewport = new JViewport();
-		 viewport.setView(fixTable);
-		 viewport.setPreferredSize(fixTable.getPreferredSize());
-		 js.setRowHeaderView(viewport);
-		 js.setViewportView(jt);
+		js = new JScrollPane();
+		TransForm converter = new TransForm(head, data);
+		MyTableModel model = new MyTableModel(false, head, data);
+		JViewport viewport = new JViewport();
+		JTable tmp = new JTable();
+		viewport.setView(tmp);
+		viewport.setPreferredSize(new Dimension(0, 0));
+		js.setRowHeaderView(viewport);
+		jt = new MyTable(model, converter,tmp);
+		js.setViewportView(jt);
+
 		 
 		this.setLayout(bl);
 		this.add(js, BorderLayout.CENTER);

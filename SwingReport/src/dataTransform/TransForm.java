@@ -235,7 +235,6 @@ public class TransForm {
 	public class HeadGroup {
 		LinkedHashMap<String, HeadGroup> hash = null;
 		String value;
-		String parentName;
 		LinkedHashMap<Integer, Integer> hash2 = null;
         List<HeadGroup> list = new ArrayList<HeadGroup>();
         HeadGroup parent;
@@ -257,12 +256,8 @@ public class TransForm {
 		}
 
 		
-		public String getParentName() {
-			return parentName;
-		}
-
-		public void setParentName(String parentName) {
-			this.parentName = parentName;
+		public int getDegree() {
+			return degree;
 		}
 
 

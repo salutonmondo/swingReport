@@ -10,25 +10,8 @@ import javax.swing.table.AbstractTableModel;
 public class MyTableModel extends AbstractTableModel {
 	boolean showLineNumber;
 	List<SpanArea> spanAreas = new ArrayList<SpanArea>();
-	private String[] columnNames = { "First Name", "Last Name", "Sport",
-			"# of Years", "Vegetarian" };
-	private Object[][] data = {
-			{ "Kathy", "Smith", "Snowboarding", new Integer(5),
-					new Boolean(false) },
-			{ "John", "Doe", "Rowing", new Integer(3), new Boolean(true) },
-			{ "Sue", "Black", "Knitting", new Integer(2),
-					new Boolean(false) },
-			{ "Jane", "White", "Speed reading", new Integer(20),
-					new Boolean(true) },
-			{ "Joe", "Brown", "Pool", new Integer(10), new Boolean(false) },
-			{ "Kathy", "Smith", "Snowboarding", new Integer(5),
-				new Boolean(false) },
-		{ "John", "Doe", "Rowing", new Integer(3), new Boolean(true) },
-		{ "Sue", "Black", "Knitting", new Integer(2),
-				new Boolean(false) },
-		{ "Jane", "White", "Speed reading", new Integer(20),
-				new Boolean(true) },
-		{ "Joe", "Brown", "Pool", new Integer(10), new Boolean(false) } };
+	private String[] columnNames;
+	private Object[][] data;
 
 	public MyTableModel(boolean showLineNumber,String[] columnNames,Object[][] data) {
 		super();
@@ -73,15 +56,12 @@ public class MyTableModel extends AbstractTableModel {
 		s.beginY = y1;
 		s.endY = y2;
 		spanAreas.add(s);
-		System.out.println("cell1 " + x1 + "," + y1 + " cell2" + x2 + ","+ y2);
+//		System.out.println("cell1 " + x1 + "," + y1 + " cell2" + x2 + ","+ y2);
 	}
 
 	public SpanArea isSpaened(int row, int col) {
 		SpanArea area = null;
 		for (SpanArea s : spanAreas) {
-//			if ((row > s.beginX && row <= s.endX && col > s.beginY && col <= s.endY)
-//					|| ((row == s.beginX && col > s.beginY && col <= s.endY) || (col == s.beginY && row > s.beginX
-//							& row <= s.endX)))
 			if(row>=s.beginX&&row<=s.endX&&col>=s.beginY&&col<=s.endY)
 				area = s;
 		}

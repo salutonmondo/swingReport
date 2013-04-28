@@ -3,14 +3,15 @@ package My;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.JLabel;
 import javax.swing.JTable;
+import javax.swing.JViewport;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 
@@ -22,15 +23,16 @@ public class MyTable extends JTable {
 	/**
 	 * 
 	 */
-	boolean showLineNumbers = true;
+	boolean showLineNumbers = false;
 	private static final long serialVersionUID = 1L;
 	MyTableModel m = (MyTableModel)this.getModel();
 	TransForm converter;
-
+	JTable fixTable;
 	
-	public MyTable(MyTableModel m,TransForm converter) {
+	public MyTable(MyTableModel m,TransForm converter,JTable table) {
 		super(m);
 		this.converter = converter;
+		this.fixTable = table;
 		/*
 		 * if the table shows line Number then define it's line No column Renderer
 		 */
@@ -62,13 +64,9 @@ public class MyTable extends JTable {
 //			
 //		});
 //		this.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		
-		updateContent(converter);
+		if(converter!=null)
+			updateContent(converter);
 		this.setUI(new MyTableUI());
-	}
-	
-	public MyTable(MyTableModel m){
-		super(m);
 	}
 	
 	
@@ -103,9 +101,9 @@ public class MyTable extends JTable {
 
 	@Override
 	public void repaint(Rectangle r) {
-		for(MyTableModel.SpanArea s:m.spanAreas){
-			super.repaint(getPaintSpanRec(s));
-		}
+//		for(MyTableModel.SpanArea s:m.spanAreas){
+//			super.repaint(getPaintSpanRec(s));
+//		}
 		
 		super.repaint(r);
 	}
@@ -150,54 +148,74 @@ public class MyTable extends JTable {
 			return;
 		}
 		List<HeadGroup> topList = hg.getNextOne(hg);
-//		List<HeadGroup> lastHeadGroups = new ArrayList<HeadGroup>();
-//		HashMap<String,ColumnGroup> lastColumnGroups = new HashMap<String,ColumnGroup>();
-//		HashMap<String,ColumnGroup> tmpLastColumnGroups = new HashMap<String,ColumnGroup>();
-//		lastHeadGroups.add(hg);	
-//		int count=0;
-//		boolean fist = true;
 		this.buildHeader(topList);
-//		for(HeadGroup p:topList){
-//			count++;
-//			if(fist){
-//				ColumnGroup cg = new ColumnGroup(p.getValue());
-//				header.addColumnGroup(cg);
-//				lastColumnGroups.put(cg.text, cg);
-//				tmpLastColumnGroups.put(cg.text, cg);
-//			}
-//			else{
-//				StringBuilder sb = new StringBuilder();
-//				while(!p.getParent().getValue().equals("root")){
-//					sb.append(p.getParent().getValue());
-//				}
-//				sb.append(p.getValue());
-//				ColumnGroup parent = lastColumnGroups.get(sb.toString());
-//				ColumnGroup sub = new ColumnGroup(p.getValue());
-//				System.out.println("3:"+sb.toString());
-//				parent.add(sub);
-//				if(p.getHash2()!=null){
-//					for(Map.Entry<Integer, Integer> ent :p.getHash2().entrySet()){
-//						ColumnGroup cg = new ColumnGroup(this.getColumnName(ent.getKey()));
-//						System.out.println("1:"+cg.text);
-//						sub.add(cg);
-//					}
-//				}
-//				sb.append(sub.text);
-//				tmpLastColumnGroups.put(sb.toString(), sub);
-//			}
-//			if(count==topList.size()){
-//				fist = false;
-//				topList = p.getNext(topList);
-//				if(topList==null)
-//					break;
-//				lastColumnGroups = tmpLastColumnGroups;
-//				continue;
-//			}
-//		}
+
+		
+		HeadGroup rg = t.getRowG();
+		rowTableData = new String[rg.getDegree()][rg.getHeight()];
+		rowHead = new String[rg.getHeight()];
+		List<HeadGroup> topList2 = rg.getNextOne(rg);
+		BuilderRowHeader(topList2);
+		
+		
+		MyTableModel m2 = new MyTableModel(false,rowHead,rowTableData);
+		
+		for(int[] spans:spanInfo){
+			m2.addSpan(spans[0], spans[1], spans[0]+spans[2]-1, spans[1]);
+		}
+//		m2.addSpan(0,0,1,0);
+//		m2.addSpan(2,0,3,0);
+		MyTable spanedTable = new MyTable(m2,null,null);
+		JViewport v = (JViewport)this.fixTable.getParent();
+		v.remove(fixTable);
+		v.setView(spanedTable);
+		v.setPreferredSize(spanedTable.getPreferredSize());
 	}
+	
+	
 	HashMap<String, ColumnGroup> lastColumnGroups = new HashMap<String, ColumnGroup>();
 	StringBuilder parentKey = new StringBuilder();
-	;
+	String[][] rowTableData;
+	String[] rowHead;
+	int rowSpan = 0;
+	int rowCacuHeight = 0;
+	List<int[]> spanInfo = new ArrayList<int[]>();
+	
+	public void BuilderRowHeader(List<HeadGroup> topList2){
+		if(topList2==null)return;
+		int span=0;
+		for (HeadGroup p : topList2) {
+			int spanRange = p.getNextOne(p)!=null?p.getNextOne(p).size():1;
+			int[] sp =null;
+			if(spanRange>1){
+				sp = new int[3];
+				sp[0] = span;
+				sp[1] = rowCacuHeight;
+				sp[2] = spanRange;
+			}
+			rowTableData[span][rowCacuHeight] = p.getValue();
+			span = span+spanRange;
+			if(sp!=null)
+				spanInfo.add(sp);
+		}
+		List<HeadGroup> nextList = topList2.get(0).getNext(topList2);
+		rowHead[rowCacuHeight]="";
+		rowCacuHeight++;
+		BuilderRowHeader(nextList);
+	}
+	
+	public void getRowSpan(HeadGroup p){
+		if(p.getHash()==null){
+			return ;
+		}
+		if(p.getHash2()!=null){
+			rowSpan = rowSpan+1;
+		}
+		else{
+			getRowSpan(p);
+		}
+	}
+	
 	public void buildHeader(List<HeadGroup> topList) {
 		int columnIndex = 0;
 		GroupableTableHeader header = (GroupableTableHeader) getTableHeader();	
@@ -215,7 +233,7 @@ public class MyTable extends JTable {
 				getParentsKey(p);
 				ColumnGroup parent = lastColumnGroups.get(parentKey.toString());
 				ColumnGroup sub = new ColumnGroup(p.getValue());
-				System.out.println("3:" + parent.text+" add "+ sub.text);
+//				System.out.println("3:" + parent.text+" add "+ sub.text);
 				parent.add(sub);
 				last = sub;
 				parentKey.append(sub.text);
@@ -223,11 +241,10 @@ public class MyTable extends JTable {
 				parentKey = new StringBuilder();
 			}
 			if (p.getHash2() != null) {
-				for (Map.Entry<Integer, Integer> ent : p.getHash2()
-						.entrySet()) {
+				for (int j=0;j<p.getHash2().size();j++) {
 					last.add(this.getColumnModel().getColumn(columnIndex));
 					columnIndex++;
-					System.out.println("1:" +last.text+" add "+ ent.getValue());
+//					System.out.println("1:" +last.text+" add "+ ent.getValue());
 				}
 			}
 		}
@@ -244,4 +261,10 @@ public class MyTable extends JTable {
 		parentKey.append(p.getParent().getValue());
 		getParentsKey(p.getParent());
 	}
+	
+	public void foldup(){
+		setPreferredSize(super.getPreferredSize());
+	}
+	
+	
 }
