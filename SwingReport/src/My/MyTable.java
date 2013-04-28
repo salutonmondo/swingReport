@@ -140,9 +140,9 @@ public class MyTable extends JTable {
 		t.trans();
 		m = new MyTableModel(false,t.getResultHead(),t.getResultsData());
 		this.setModel(m);
-		GroupableTableHeader header = (GroupableTableHeader) getTableHeader();	
 		HeadGroup hg = t.getColG();
 		if (hg == null) {
+			GroupableTableHeader header = (GroupableTableHeader) getTableHeader();	
 			for (String s : t.getResultHead()) {
 				ColumnGroup g = new ColumnGroup(s);
 				header.addColumnGroup(g);
@@ -150,13 +150,13 @@ public class MyTable extends JTable {
 			return;
 		}
 		List<HeadGroup> topList = hg.getNextOne(hg);
-		List<HeadGroup> lastHeadGroups = new ArrayList<HeadGroup>();
-		HashMap<String,ColumnGroup> lastColumnGroups = new HashMap<String,ColumnGroup>();
-		HashMap<String,ColumnGroup> tmpLastColumnGroups = new HashMap<String,ColumnGroup>();
-		lastHeadGroups.add(hg);	
-		int count=0;
-		boolean fist = true;
-		this.buildHeader(header, topList);
+//		List<HeadGroup> lastHeadGroups = new ArrayList<HeadGroup>();
+//		HashMap<String,ColumnGroup> lastColumnGroups = new HashMap<String,ColumnGroup>();
+//		HashMap<String,ColumnGroup> tmpLastColumnGroups = new HashMap<String,ColumnGroup>();
+//		lastHeadGroups.add(hg);	
+//		int count=0;
+//		boolean fist = true;
+		this.buildHeader(topList);
 //		for(HeadGroup p:topList){
 //			count++;
 //			if(fist){
@@ -195,46 +195,53 @@ public class MyTable extends JTable {
 //			}
 //		}
 	}
-
-	public void buildHeader(GroupableTableHeader header, List<HeadGroup> topList) {
-		HashMap<String, ColumnGroup> lastColumnGroups = new HashMap<String, ColumnGroup>();
+	HashMap<String, ColumnGroup> lastColumnGroups = new HashMap<String, ColumnGroup>();
+	StringBuilder parentKey = new StringBuilder();
+	;
+	public void buildHeader(List<HeadGroup> topList) {
+		int columnIndex = 0;
+		GroupableTableHeader header = (GroupableTableHeader) getTableHeader();	
 		HashMap<String, ColumnGroup> tmpLastColumnGroups = new HashMap<String, ColumnGroup>();
+		if(topList==null)return;
+		ColumnGroup last;
 		for (HeadGroup p : topList) {
 			if (!header.isAdded) {
 				ColumnGroup cg = new ColumnGroup(p.getValue());
+				last = cg;
 				header.addColumnGroup(cg);
 				lastColumnGroups.put(cg.text, cg);
 				tmpLastColumnGroups.put(cg.text, cg);
 			} else {
-				StringBuilder sb = new StringBuilder();
-				HeadGroup tmp = p;
-				while (!p.getParent().getValue().equals("root")) {
-					sb.append(p.getParent().getValue());
-					p=p.getParent();
-				}
-				sb.append(p.getValue());
-				ColumnGroup parent = lastColumnGroups.get(sb.toString());
-				p = tmp;
+				getParentsKey(p);
+				ColumnGroup parent = lastColumnGroups.get(parentKey.toString());
 				ColumnGroup sub = new ColumnGroup(p.getValue());
-				System.out.println("3:" + sb.toString());
+				System.out.println("3:" + parent.text+" add "+ sub.text);
 				parent.add(sub);
-				if (p.getHash2() != null) {
-					for (Map.Entry<Integer, Integer> ent : p.getHash2()
-							.entrySet()) {
-						ColumnGroup cg = new ColumnGroup(this.getColumnName(ent
-								.getKey()));
-						System.out.println("1:" + cg.text);
-						sub.add(cg);
-					}
-				}
-				sb.append(sub.text);
-				tmpLastColumnGroups.put(sb.toString(), sub);
+				last = sub;
+				parentKey.append(sub.text);
+				tmpLastColumnGroups.put(parentKey.toString(), sub);
+				parentKey = new StringBuilder();
 			}
-			if(p.getHash2()!=null)
-				return ;
+			if (p.getHash2() != null) {
+				for (Map.Entry<Integer, Integer> ent : p.getHash2()
+						.entrySet()) {
+					last.add(this.getColumnModel().getColumn(columnIndex));
+					columnIndex++;
+					System.out.println("1:" +last.text+" add "+ ent.getValue());
+				}
+			}
 		}
+		lastColumnGroups = tmpLastColumnGroups;
+		//tmpLastColumnGroups.clear();
 		header.isAdded = true;
 		List<HeadGroup> nextList = topList.get(0).getNext(topList);
-		buildHeader(header,nextList);
+		buildHeader(nextList);
+	}
+	
+	public void getParentsKey(HeadGroup p) {
+		if (p.getParent().getValue().equals("root"))
+			return;
+		parentKey.append(p.getParent().getValue());
+		getParentsKey(p.getParent());
 	}
 }

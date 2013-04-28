@@ -49,7 +49,7 @@ public class Main extends JFrame {
 				{ "1"},
 				{ "2"} };
 		
-		String[][] data = new String[][] { { "1", "上海店", "800", "A05" },
+		String[][] data = new String[][] { { "1","上海店", "800", "A05" },
 				{ "1", "上海店", "900", "A04" },
 				{ "2", "上海店", "900", "A05" },
 				{ "1", "北京店", "400", "A05" },
@@ -96,7 +96,7 @@ public class Main extends JFrame {
 		c.gridx = 0;
 		c.gridy = 1;
 		jp.add(new CustomPanel(jt,"Row",new Dimension(20,40)), c);
-
+//
 		c.gridx = 1;
 		c.gridy = 1;
 		jp.add(new CustomPanel(jt,"Data",new Dimension(20,40)), c);
