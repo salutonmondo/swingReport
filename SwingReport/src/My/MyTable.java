@@ -1,15 +1,20 @@
 package My;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.swing.BorderFactory;
+import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JViewport;
 import javax.swing.table.JTableHeader;
@@ -37,10 +42,10 @@ public class MyTable extends JTable {
 		 * if the table shows line Number then define it's line No column Renderer
 		 */
 		if(showLineNumbers)this.columnModel.getColumn(0).setCellRenderer(new LineNumberRenderer(true));
-		for(int i=1;i<this.columnModel.getColumnCount();i++){
-			TableColumn tc = this.columnModel.getColumn(i);
-			tc.setCellRenderer(new MyCellRenderer(true));
-		}
+//		for(int i=1;i<this.columnModel.getColumnCount();i++){
+//			TableColumn tc = this.columnModel.getColumn(i);
+//			tc.setCellRenderer(new MyCellRenderer(true));
+//		}
 		this.setRowSelectionAllowed(false);
 		this.getTableHeader().setReorderingAllowed(false);
 		
@@ -101,10 +106,9 @@ public class MyTable extends JTable {
 
 	@Override
 	public void repaint(Rectangle r) {
-//		for(MyTableModel.SpanArea s:m.spanAreas){
-//			super.repaint(getPaintSpanRec(s));
-//		}
-		
+		for(MyTableModel.SpanArea s:m.spanAreas){
+			super.repaint(getPaintSpanRec(s));
+		}
 		super.repaint(r);
 	}
 	
@@ -136,7 +140,8 @@ public class MyTable extends JTable {
 	
 	public void updateContent(TransForm t){
 		t.trans();
-		m = new MyTableModel(false,t.getResultHead(),t.getResultsData());
+		m = new MyTableModel(false,t.getResultHead(),t.getResultsData(),null);
+//		m.addSpan(2, 2, 3, 3);
 		this.setModel(m);
 		HeadGroup hg = t.getColG();
 		if (hg == null) {
@@ -154,25 +159,70 @@ public class MyTable extends JTable {
 		HeadGroup rg = t.getRowG();
 		rowTableData = new String[rg.getDegree()][rg.getHeight()];
 		rowHead = new String[rg.getHeight()];
+		
 		List<HeadGroup> topList2 = rg.getNextOne(rg);
 		BuilderRowHeader(topList2);
 		
 		
-		MyTableModel m2 = new MyTableModel(false,rowHead,rowTableData);
+		MyTableModel m2 = new MyTableModel(false,rowHead,rowTableData,null);
+		
 		
 		for(int[] spans:spanInfo){
 			m2.addSpan(spans[0], spans[1], spans[0]+spans[2]-1, spans[1]);
 		}
-//		m2.addSpan(0,0,1,0);
-//		m2.addSpan(2,0,3,0);
+
 		MyTable spanedTable = new MyTable(m2,null,null);
+		
+		JPanel leftCorner = new JPanel();
+		leftCorner.setLayout(null);
+		leftCorner.setBackground(Main.bgColor);
+		/*
+		 * set the upper-left corner header
+		 */
 		JViewport v = (JViewport)this.fixTable.getParent();
 		v.remove(fixTable);
 		v.setView(spanedTable);
 		v.setPreferredSize(spanedTable.getPreferredSize());
+		JScrollPane jp = (JScrollPane)v.getParent().getParent();
+		GroupableTableHeader header = (GroupableTableHeader) getTableHeader();	
+		int cornerHeight = ((GroupableTableHeaderUI)header.getUI()).getHeaderHeight();
+		JTableHeader leftTableHeader = spanedTable.getTableHeader();
+		int leftOffSet = 0;
+		for(int rowIndex = 0;rowIndex<t.getRowItem().size();rowIndex++){
+			JButton jb = new JButton(t.getOriHead()[t.getRowItem().get(rowIndex)]);
+			int width = leftTableHeader.getColumnModel().getColumn(rowIndex).getPreferredWidth();
+			Dimension oriD = jb.getPreferredSize();
+			jb.setBackground(Main.bgColor);
+			leftCorner.add(jb);
+			jb.setBounds(leftOffSet,cornerHeight-oriD.height,width,oriD.height);
+			leftOffSet+=width;
+		}
+		jp.setCorner(JScrollPane.UPPER_LEFT_CORNER, leftCorner);
+		
+		/*
+		 * set the colorName of the column header
+		 */
+		
+		JPanel centerPanel = (JPanel)jp.getParent();
+		JPanel centerTopPanel = (JPanel)centerPanel.getComponent(0);
+		int leftOffSet2 = spanedTable.getPreferredSize().width;
+		int prefredHeight = 0;
+		for(int colIndex = 0;colIndex<t.getColItem().size();colIndex++){
+			JButton jb = new JButton(t.getOriHead()[t.getColItem().get(colIndex)]);
+			Dimension oriD = jb.getPreferredSize();
+			jb.setBackground(Main.bgColor);
+			leftCorner.add(jb);
+			centerTopPanel.add(jb);
+			prefredHeight = oriD.height;
+			jb.setBounds(leftOffSet2,0,oriD.width,oriD.height);
+			leftOffSet2+=oriD.width;
+		}
+		centerTopPanel.setPreferredSize(new Dimension(0,prefredHeight));
 	}
 	
-	
+	/*
+	 * Build row header
+	 */
 	HashMap<String, ColumnGroup> lastColumnGroups = new HashMap<String, ColumnGroup>();
 	StringBuilder parentKey = new StringBuilder();
 	String[][] rowTableData;
@@ -185,13 +235,20 @@ public class MyTable extends JTable {
 		if(topList2==null)return;
 		int span=0;
 		for (HeadGroup p : topList2) {
-			int spanRange = p.getNextOne(p)!=null?p.getNextOne(p).size():1;
+			getRowSpan(p);
+			int spanRange = p.getNextOne(p)!=null?rowSpan:1;
+			rowSpan = 0;
 			int[] sp =null;
 			if(spanRange>1){
 				sp = new int[3];
 				sp[0] = span;
 				sp[1] = rowCacuHeight;
 				sp[2] = spanRange;
+				Object[] totalInfo = new Object[3];
+				totalInfo[0] = rowCacuHeight;
+				totalInfo[1] = span;
+				totalInfo[2] = "total of '"+p+"'";
+				this.insertInfo.add(totalInfo);
 			}
 			rowTableData[span][rowCacuHeight] = p.getValue();
 			span = span+spanRange;
@@ -205,17 +262,27 @@ public class MyTable extends JTable {
 	}
 	
 	public void getRowSpan(HeadGroup p){
-		if(p.getHash()==null){
-			return ;
+		List<HeadGroup> list = p.getNextOne(p);
+		if(list!=null)
+		for(HeadGroup g:list){
+			if(g.getHash2()!=null){
+				rowSpan = rowSpan+1;
+			}
+			else{
+				getRowSpan(g);
+			}
 		}
-		if(p.getHash2()!=null){
-			rowSpan = rowSpan+1;
-		}
-		else{
-			getRowSpan(p);
-		}
+		
 	}
+	/*
+	 * the total info to be inserted into the row header and data model
+	 * Object[]: 0. (int)height from where the total span start 1.(int) the start row index of the total span 2.(string) the content of the total like("total of ±±¾©µê")
+	 */
+	List<Object[]> insertInfo = new ArrayList<Object[]>();
 	
+	/*
+	 * Build column header
+	 */
 	public void buildHeader(List<HeadGroup> topList) {
 		int columnIndex = 0;
 		GroupableTableHeader header = (GroupableTableHeader) getTableHeader();	

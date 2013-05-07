@@ -12,13 +12,30 @@ public class MyTableModel extends AbstractTableModel {
 	List<SpanArea> spanAreas = new ArrayList<SpanArea>();
 	private String[] columnNames;
 	private Object[][] data;
+	//the insertion info of the total row.
+	List<Object[]> insertInfo;
+	static int MODEL_TPE_ROW = 0;
+	static int MODEL_TPE_DATA = 1;
 
-	public MyTableModel(boolean showLineNumber,String[] columnNames,Object[][] data) {
+	public MyTableModel(boolean showLineNumber,String[] columnNames,Object[][] data,List<Object[]> insertInfo) {
 		super();
 		this.columnNames=columnNames;
 		this.data = data;
 		this.showLineNumber = showLineNumber;
-//		this.addSpan(2, 2, 2, 3);
+		this.insertInfo = insertInfo;
+		
+//		if(insertInfo!=null){
+//			this.data = new Object[data.length+insertInfo.size()][this.data[0].length];
+//			if(modelType == 0)
+//				for(int i=0;i<data.length;i++){
+//					
+//				}
+//			else{
+//				for(int i=0;i<data.length;i++){
+//					
+//				}
+//			}
+//		}
 	}
 
 	@Override
@@ -35,7 +52,9 @@ public class MyTableModel extends AbstractTableModel {
 	public Object getValueAt(int rowIndex, int columnIndex) {
 		if(showLineNumber)
 			return columnIndex==0?rowIndex+1:data[rowIndex][columnIndex-1];
-		else
+		else{
+			
+		}
 			return data[rowIndex][columnIndex];
 	}
 	
@@ -74,7 +93,7 @@ public class MyTableModel extends AbstractTableModel {
 				return true;
 			}
 			else
-				return false;
+				continue;
 		}
 		return false;
 	}

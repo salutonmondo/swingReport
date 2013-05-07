@@ -30,6 +30,7 @@ import My.GroupableTableHeader;
 import My.MyTable;
 import My.MyTableModel;
 import dataTransform.TransForm;
+import My.Main;
 
 public class CustomPanel extends JPanel implements DropTargetListener{
 	private Color normalHue;
@@ -46,8 +47,10 @@ public class CustomPanel extends JPanel implements DropTargetListener{
         int width = getWidth();
         int height = getHeight();
 //        float alignmentX = getAlignmentX();
-          g.setColor(new Color(.3f, .4f, .5f, .6f));
-          g.fill3DRect(0, 0, width, height, true);
+//          g.setColor(new Color(.3f, .4f, .5f, .6f));
+//          Color color = Main.bgColor.brighter();
+//          g.setColor(color);
+//          g.fill3DRect(0, 0, width, height, true);
 //        int count = 0;
 //        int distance = 0;
 //        for(String r:items){
@@ -69,6 +72,7 @@ public class CustomPanel extends JPanel implements DropTargetListener{
     }
     public CustomPanel(JTable table ,String areaName,Dimension preferredSize){
     	super();
+    	setBackground(Main.bgColor);
     	this.table = table;
     	this.preferredSize = preferredSize;
     	this.areaName = areaName;

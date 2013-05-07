@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 
+import javax.swing.BorderFactory;
 import javax.swing.JComponent;
 import javax.swing.JTable;
 import javax.swing.JTextArea;
@@ -38,6 +39,7 @@ class MyCellRenderer extends JComponent  implements TableCellRenderer {
 			ren.setBackground(Color.CYAN);
 		}
 		ren.setText(content.toString());
+		ren.setBorder(BorderFactory.createEmptyBorder());
 		return ren;
 	}
 	

@@ -83,7 +83,7 @@ public class GroupableTableHeaderUI extends BasicTableHeaderUI {
 				cellRect.width, cellRect.height, true);
   }
 
-  private int getHeaderHeight() {
+  public int getHeaderHeight() {
     int height = 0;
     TableColumnModel columnModel = header.getColumnModel();
     for(int column = 0; column < columnModel.getColumnCount(); column++) {

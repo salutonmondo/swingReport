@@ -122,7 +122,6 @@ public class GroupableTableHeader extends JTableHeader implements DragGestureLis
 
 	@Override
 	public void dragGestureRecognized(DragGestureEvent evt) {
-		Container c = this.getTable().getParent().getParent();
 		int colNo = this.columnAtPoint(evt.getDragOrigin());
 		boolean isShowLineNo = ((MyTableModel)table.getModel()).isShowLineNumber();
 		int tmp = isShowLineNo?colNo-1:colNo;
