@@ -9,6 +9,7 @@ import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -140,42 +141,44 @@ public class MyTable extends JTable {
 	
 	public void updateContent(TransForm t){
 		t.trans();
-		m = new MyTableModel(false,t.getResultHead(),t.getResultsData(),null);
-//		m.addSpan(2, 2, 3, 3);
-		this.setModel(m);
+		GroupableTableHeader header = (GroupableTableHeader) getTableHeader();	
 		HeadGroup hg = t.getColG();
+		/*
+		 * first time initiate the plain table 
+		 */
 		if (hg == null) {
-			GroupableTableHeader header = (GroupableTableHeader) getTableHeader();	
 			for (String s : t.getResultHead()) {
 				ColumnGroup g = new ColumnGroup(s);
 				header.addColumnGroup(g);
 			}
 			return;
 		}
-		List<HeadGroup> topList = hg.getNextOne(hg);
-		this.buildHeader(topList);
-
-		
+		/*
+		 * build the row header table
+		 */
 		HeadGroup rg = t.getRowG();
 		rowTableData = new String[rg.getDegree()][rg.getHeight()];
 		rowHead = new String[rg.getHeight()];
-		
 		List<HeadGroup> topList2 = rg.getNextOne(rg);
 		BuilderRowHeader(topList2);
-		
-		
-		MyTableModel m2 = new MyTableModel(false,rowHead,rowTableData,null);
-		
-		
+		MyTableModel m2 = new MyTableModel(false,rowHead,rowTableData,null,MyTableModel.MODEL_TPE_ROW);
 		for(int[] spans:spanInfo){
 			m2.addSpan(spans[0], spans[1], spans[0]+spans[2]-1, spans[1]);
 		}
-
 		MyTable spanedTable = new MyTable(m2,null,null);
-		
 		JPanel leftCorner = new JPanel();
 		leftCorner.setLayout(null);
 		leftCorner.setBackground(Main.bgColor);
+		
+		/*
+		 * build the column table and the spaned table header
+		 */
+		
+		m = new MyTableModel(false,t.getResultHead(),t.getResultsData(),null,MyTableModel.MODEL_TPE_DATA);
+		this.setModel(m);
+		List<HeadGroup> topList = hg.getNextOne(hg);
+		this.buildHeader(topList);
+		
 		/*
 		 * set the upper-left corner header
 		 */
@@ -184,7 +187,6 @@ public class MyTable extends JTable {
 		v.setView(spanedTable);
 		v.setPreferredSize(spanedTable.getPreferredSize());
 		JScrollPane jp = (JScrollPane)v.getParent().getParent();
-		GroupableTableHeader header = (GroupableTableHeader) getTableHeader();	
 		int cornerHeight = ((GroupableTableHeaderUI)header.getUI()).getHeaderHeight();
 		JTableHeader leftTableHeader = spanedTable.getTableHeader();
 		int leftOffSet = 0;
@@ -195,14 +197,15 @@ public class MyTable extends JTable {
 			jb.setBackground(Main.bgColor);
 			leftCorner.add(jb);
 			jb.setBounds(leftOffSet,cornerHeight-oriD.height,width,oriD.height);
+//			jb.setBounds(leftOffSet,0,width,oriD.height);
 			leftOffSet+=width;
 		}
+		jp.setBackground(Color.red);
 		jp.setCorner(JScrollPane.UPPER_LEFT_CORNER, leftCorner);
 		
 		/*
 		 * set the colorName of the column header
 		 */
-		
 		JPanel centerPanel = (JPanel)jp.getParent();
 		JPanel centerTopPanel = (JPanel)centerPanel.getComponent(0);
 		int leftOffSet2 = spanedTable.getPreferredSize().width;
@@ -218,10 +221,15 @@ public class MyTable extends JTable {
 			leftOffSet2+=oriD.width;
 		}
 		centerTopPanel.setPreferredSize(new Dimension(0,prefredHeight));
+		
+		for(Map.Entry<Integer, Object[]> ent:this.insertInfo.entrySet()){
+			System.out.println(ent.getKey());
+			System.out.println(ent.getValue()[0]);
+		};
 	}
 	
 	/*
-	 * Build row header
+	 * the global variable which be used to build column table header and the row header table
 	 */
 	HashMap<String, ColumnGroup> lastColumnGroups = new HashMap<String, ColumnGroup>();
 	StringBuilder parentKey = new StringBuilder();
@@ -248,7 +256,7 @@ public class MyTable extends JTable {
 				totalInfo[0] = rowCacuHeight;
 				totalInfo[1] = span;
 				totalInfo[2] = "total of '"+p+"'";
-				this.insertInfo.add(totalInfo);
+				this.insertInfo.put(span+spanRange,totalInfo);
 			}
 			rowTableData[span][rowCacuHeight] = p.getValue();
 			span = span+spanRange;
@@ -278,10 +286,10 @@ public class MyTable extends JTable {
 	 * the total info to be inserted into the row header and data model
 	 * Object[]: 0. (int)height from where the total span start 1.(int) the start row index of the total span 2.(string) the content of the total like("total of ±±¾©µê")
 	 */
-	List<Object[]> insertInfo = new ArrayList<Object[]>();
+	HashMap<Integer,Object[]> insertInfo = new HashMap<Integer,Object[]>();
 	
 	/*
-	 * Build column header
+	 * Build column header and gather the total span rows info.
 	 */
 	public void buildHeader(List<HeadGroup> topList) {
 		int columnIndex = 0;

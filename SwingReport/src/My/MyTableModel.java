@@ -17,25 +17,25 @@ public class MyTableModel extends AbstractTableModel {
 	static int MODEL_TPE_ROW = 0;
 	static int MODEL_TPE_DATA = 1;
 
-	public MyTableModel(boolean showLineNumber,String[] columnNames,Object[][] data,List<Object[]> insertInfo) {
+	public MyTableModel(boolean showLineNumber,String[] columnNames,Object[][] data,List<Object[]> insertInfo,int modelType) {
 		super();
 		this.columnNames=columnNames;
 		this.data = data;
 		this.showLineNumber = showLineNumber;
 		this.insertInfo = insertInfo;
 		
-//		if(insertInfo!=null){
-//			this.data = new Object[data.length+insertInfo.size()][this.data[0].length];
-//			if(modelType == 0)
-//				for(int i=0;i<data.length;i++){
-//					
-//				}
-//			else{
-//				for(int i=0;i<data.length;i++){
-//					
-//				}
-//			}
-//		}
+		if(insertInfo!=null){
+			this.data = new Object[data.length+insertInfo.size()][this.data[0].length];
+			if(modelType == 0)
+				for(int i=0;i<data.length;i++){
+					
+				}
+			else{
+				for(int i=0;i<data.length;i++){
+					
+				}
+			}
+		}
 	}
 
 	@Override

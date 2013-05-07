@@ -49,7 +49,7 @@ public class Main extends JFrame {
 		String[] head = new String[] { "月份", "店铺", "销售", "商品","颜色" };
 		js = new JScrollPane();
 		TransForm converter = new TransForm(head, data);
-		MyTableModel model = new MyTableModel(false, head, data,null);
+		MyTableModel model = new MyTableModel(false, head, data,null,MyTableModel.MODEL_TPE_DATA);
 		JViewport viewport = new JViewport();
 		JTable tmp = new JTable((Object[][])data,head);
 		viewport.setView(tmp);
