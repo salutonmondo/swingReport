@@ -2,14 +2,13 @@ package My;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.util.List;
 
-import javax.swing.CellRendererPane;
 import javax.swing.JComponent;
-import javax.swing.JTable;
 import javax.swing.plaf.basic.BasicTableUI;
 import javax.swing.table.TableCellRenderer;
 
@@ -22,8 +21,10 @@ class MyTableUI extends BasicTableUI {
 		// -1 is a flag that the ending point is outside the table:
 		if (lastRow < 0)
 			lastRow = table.getRowCount() - 1;
-		for (int row = firstRow; row <= lastRow; row++)
+		for (int row = firstRow; row <= lastRow; row++){
 			paintRow(row, g);
+		}
+			
 	}
 
 	private void paintRow(int row, Graphics g) {

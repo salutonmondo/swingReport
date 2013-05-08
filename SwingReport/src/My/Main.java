@@ -40,7 +40,7 @@ public class Main extends JFrame {
             }
         });
 	}
-
+//
 	public void initComponent() {
 		String[][] data = new String[][] { { "1", "上海店", "800", "A05","red" },{ "1", "上海店", "800", "A05","yellow" },
 				{ "1", "上海店", "900", "A04","red" }, { "2", "上海店", "900", "A05" ,"yellow"},

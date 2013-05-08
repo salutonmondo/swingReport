@@ -240,6 +240,8 @@ public class TransForm {
         HeadGroup parent;
         int degree = 0;
         int height=0;
+        int baseLine = 0;
+        int extraLine = 0;
 		public void addSelf(Object obj) {
 			if (obj instanceof int[]) {
 				if (hash2 == null)
@@ -343,7 +345,6 @@ public class TransForm {
 			return nextList;
 		}
 
-
 		public HeadGroup getParent() {
 			return parent;
 		}
@@ -352,6 +353,27 @@ public class TransForm {
 		public void setParent(HeadGroup parent) {
 			this.parent = parent;
 		}
+
+
+		public int getBaseLine() {
+			return baseLine;
+		}
+
+
+		public void setBaseLine(int baseLine) {
+			this.baseLine = baseLine;
+		}
+
+
+		public int getExtraLine() {
+			return extraLine;
+		}
+
+
+		public void setExtraLine(int extraLine) {
+			this.extraLine = extraLine;
+		}
+		
 		
 		
 	}

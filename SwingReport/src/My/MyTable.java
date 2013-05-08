@@ -7,6 +7,8 @@ import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +22,7 @@ import javax.swing.JTable;
 import javax.swing.JViewport;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
+import javax.swing.table.TableColumnModel;
 
 import My.MyTableModel.SpanArea;
 import dataTransform.TransForm;
@@ -157,13 +160,45 @@ public class MyTable extends JTable {
 		 * build the row header table
 		 */
 		HeadGroup rg = t.getRowG();
-		rowTableData = new String[rg.getDegree()][rg.getHeight()];
+
+		
 		rowHead = new String[rg.getHeight()];
 		List<HeadGroup> topList2 = rg.getNextOne(rg);
+		int rowHeaderRows = 0;
+		for(HeadGroup tmph : topList2){
+			this.getRowSpanIncludeTotal(tmph);
+			rowHeaderRows = rowHeaderRows+ this.verticalSpan;
+			verticalSpan = 0;
+		}
+//		rowTableData = new String[rg.getDegree()][rg.getHeight()];
+		rowTableData = new String[rowHeaderRows][rg.getHeight()];
+		
 		BuilderRowHeader(topList2);
-		MyTableModel m2 = new MyTableModel(false,rowHead,rowTableData,null,MyTableModel.MODEL_TPE_ROW);
-		for(int[] spans:spanInfo){
+		//because the paint process is executed row by row so the horizental span info must first be sorted.
+		Collections.sort(this.insertInfo, new Comparator<Object[]>() {
+			public int compare(Object[] o1,Object[] o2) {
+				int score1 = Integer.parseInt(o1[1].toString());
+				int score2 = Integer.parseInt(o2[1].toString());
+				if (score1 > score2)
+					return 1;
+				else if (score1 < score2)
+					return -1;
+				else
+					return 0;
+			}
+		});
+		
+		MyTableModel m2 = new MyTableModel(false,rowHead,rowTableData,this.insertInfo,MyTableModel.MODEL_TPE_ROW);
+		//add vertical span
+		for(int[] spans:verticalSpanInfo){
 			m2.addSpan(spans[0], spans[1], spans[0]+spans[2]-1, spans[1]);
+		}
+		//add horizental span
+		for(Object[] horizentalSpan :this.insertInfo){
+			int y = Integer.parseInt(horizentalSpan[1].toString());
+			int x = Integer.parseInt(horizentalSpan[0].toString())-1;
+			int end = m2.getColumnCount()-1;
+			m2.addSpan(x, y, x, end);
 		}
 		MyTable spanedTable = new MyTable(m2,null,null);
 		JPanel leftCorner = new JPanel();
@@ -222,10 +257,12 @@ public class MyTable extends JTable {
 		}
 		centerTopPanel.setPreferredSize(new Dimension(0,prefredHeight));
 		
-		for(Map.Entry<Integer, Object[]> ent:this.insertInfo.entrySet()){
-			System.out.println(ent.getKey());
-			System.out.println(ent.getValue()[0]);
-		};
+		for(Object[] obj:this.insertInfo){
+			System.out.println("****************");
+			System.out.println(obj[0]);
+			System.out.println(obj[1]);
+			System.out.println(obj[2]);
+		}
 	}
 	
 	/*
@@ -235,33 +272,40 @@ public class MyTable extends JTable {
 	StringBuilder parentKey = new StringBuilder();
 	String[][] rowTableData;
 	String[] rowHead;
-	int rowSpan = 0;
+	int verticalSpan = 0;
 	int rowCacuHeight = 0;
-	List<int[]> spanInfo = new ArrayList<int[]>();
+	List<int[]> verticalSpanInfo = new ArrayList<int[]>();
 	
 	public void BuilderRowHeader(List<HeadGroup> topList2){
 		if(topList2==null)return;
 		int span=0;
+		int initLine = 0;
 		for (HeadGroup p : topList2) {
-			getRowSpan(p);
-			int spanRange = p.getNextOne(p)!=null?rowSpan:1;
-			rowSpan = 0;
+			this.getRowSpanIncludeTotal(p);
+			int spanRange = p.getNextOne(p)!=null?verticalSpan:1;
+			if(p.getParent().getBaseLine()==0){
+				initLine = 0;
+			}
+			p.getParent().setBaseLine(1);
+			verticalSpan = 0;
 			int[] sp =null;
 			if(spanRange>1){
 				sp = new int[3];
 				sp[0] = span;
 				sp[1] = rowCacuHeight;
-				sp[2] = spanRange;
+				sp[2] = spanRange-1;
 				Object[] totalInfo = new Object[3];
-				totalInfo[0] = rowCacuHeight;
-				totalInfo[1] = span;
+				totalInfo[0] = span+spanRange;
+				totalInfo[1] = rowCacuHeight;
 				totalInfo[2] = "total of '"+p+"'";
-				this.insertInfo.put(span+spanRange,totalInfo);
+				this.insertInfo.add(totalInfo);
 			}
-			rowTableData[span][rowCacuHeight] = p.getValue();
+			rowTableData[p.getParent().getExtraLine()+initLine][rowCacuHeight] = p.getValue();
+			p.setExtraLine(p.getParent().getExtraLine()+initLine);
 			span = span+spanRange;
+			initLine = initLine+spanRange;
 			if(sp!=null)
-				spanInfo.add(sp);
+				verticalSpanInfo.add(sp);
 		}
 		List<HeadGroup> nextList = topList2.get(0).getNext(topList2);
 		rowHead[rowCacuHeight]="";
@@ -269,24 +313,44 @@ public class MyTable extends JTable {
 		BuilderRowHeader(nextList);
 	}
 	
-	public void getRowSpan(HeadGroup p){
+	public void getRowSpanIncludeTotal(HeadGroup p) {
+		if(p.getHash2()!=null){
+			this.verticalSpan = verticalSpan+ 1;
+		}
 		List<HeadGroup> list = p.getNextOne(p);
-		if(list!=null)
-		for(HeadGroup g:list){
-			if(g.getHash2()!=null){
-				rowSpan = rowSpan+1;
+		if (list != null) {
+			if (list.size() > 1) {
+				verticalSpan = verticalSpan + 1;
 			}
-			else{
-				getRowSpan(g);
+			for (HeadGroup g : list) {
+				if (g.getHash2() != null) {
+					verticalSpan = verticalSpan + 1;
+				} else {
+					getRowSpanIncludeTotal(g);
+				}
 			}
 		}
-		
 	}
+	
+	public void getRowSpan(HeadGroup p) {
+		List<HeadGroup> list = p.getNextOne(p);
+		if (list != null) {
+			for (HeadGroup g : list) {
+				if (g.getHash2() != null) {
+					verticalSpan = verticalSpan + 1;
+				} else {
+					getRowSpan(g);
+				}
+			}
+		}
+	}
+	
+
 	/*
 	 * the total info to be inserted into the row header and data model
 	 * Object[]: 0. (int)height from where the total span start 1.(int) the start row index of the total span 2.(string) the content of the total like("total of ±±¾©µê")
 	 */
-	HashMap<Integer,Object[]> insertInfo = new HashMap<Integer,Object[]>();
+	List<Object[]> insertInfo = new ArrayList<Object[]>();
 	
 	/*
 	 * Build column header and gather the total span rows info.
