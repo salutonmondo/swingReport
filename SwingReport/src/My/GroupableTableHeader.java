@@ -41,14 +41,12 @@ public class GroupableTableHeader extends JTableHeader implements DragGestureLis
     super(model);
     setUI(new GroupableTableHeaderUI());
     setReorderingAllowed(false);
-    
     dragSource = new DragSource();
     dragSource.createDefaultDragGestureRecognizer(this, DnDConstants.ACTION_COPY_OR_MOVE, this);
   }
   
   public void updateUI(){
 //      setUI(this.getUI());
-
       TableCellRenderer renderer = getDefaultRenderer();
       if (renderer instanceof Component) {
           SwingUtilities.updateComponentTreeUI((Component)renderer);

@@ -72,7 +72,8 @@ public class CustomPanel extends JPanel implements DropTargetListener{
     }
     public CustomPanel(JTable table ,String areaName,Dimension preferredSize){
     	super();
-    	setBackground(Main.bgColor);
+//    	setBackground(Main.bgColor);
+    	setBackground(Color.green);
     	this.table = table;
     	this.preferredSize = preferredSize;
     	this.areaName = areaName;

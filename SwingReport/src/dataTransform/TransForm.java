@@ -22,6 +22,8 @@ public class TransForm {
 	HeadGroup colG;
 	int columnSetLength;
 	List<String> headList = new ArrayList<String>();
+	HashSet<Integer> sumField;
+	List<Integer> sumColumns = new ArrayList<Integer>();
 
 	public static void main(String args[]) {
 		TransForm t = new TransForm(new String[] { "月份", "店铺", "销售", "商品" },
@@ -30,7 +32,7 @@ public class TransForm {
 						{ "2", "上海店", "900", "A05" },
 						{ "1", "北京店", "400", "A05" },
 						{ "2", "北京店", "300", "A05" },
-						{ "3", "北京店", "700", "A05" }});
+						{ "3", "北京店", "700", "A05" }},null);
 
 		ArrayList<Integer> list = new ArrayList<Integer>();
 		list.add(0);
@@ -174,6 +176,9 @@ public class TransForm {
 									sub.hash2 = new LinkedHashMap<Integer, Integer>();
 								sub.hash2.put(dataIndex,resultIndex);
 								this.headList.add(this.oriHead[dataIndex]);
+								if(this.sumField.contains(dataIndex)){
+									this.sumColumns.add(this.headList.size()-1);
+								}
 								resultIndex++;
 								degree++;
 							}
@@ -224,9 +229,10 @@ public class TransForm {
 		dataItem.addAll(dataList);
 	}
 
-	public TransForm(String[] oriHead, String[][] oriData) {
+	public TransForm(String[] oriHead, String[][] oriData,HashSet<Integer> sumField) {
 		this.oriData = oriData;
 		this.oriHead = oriHead;
+		this.sumField = sumField;
 		for(int i=0;i<oriHead.length;i++){
 			this.dataItem.add(i);
 		}
@@ -432,6 +438,10 @@ public class TransForm {
 
 	public void setDataItem(ArrayList<Integer> dataItem) {
 		this.dataItem = dataItem;
+	}
+
+	public List<Integer> getSumColumns() {
+		return sumColumns;
 	}
 
 	@Override

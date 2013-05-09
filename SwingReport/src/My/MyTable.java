@@ -2,7 +2,6 @@ package My;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -10,10 +9,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 
-import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -22,7 +20,6 @@ import javax.swing.JTable;
 import javax.swing.JViewport;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
-import javax.swing.table.TableColumnModel;
 
 import My.MyTableModel.SpanArea;
 import dataTransform.TransForm;
@@ -46,22 +43,15 @@ public class MyTable extends JTable {
 		 * if the table shows line Number then define it's line No column Renderer
 		 */
 		if(showLineNumbers)this.columnModel.getColumn(0).setCellRenderer(new LineNumberRenderer(true));
-//		for(int i=1;i<this.columnModel.getColumnCount();i++){
-//			TableColumn tc = this.columnModel.getColumn(i);
-//			tc.setCellRenderer(new MyCellRenderer(true));
-//		}
+		for(int i=0;i<this.columnModel.getColumnCount();i++){
+			TableColumn tc = this.columnModel.getColumn(i);
+			tc.setHeaderRenderer(new MyHeaderRenderer());
+		}
 		this.setRowSelectionAllowed(false);
 		this.getTableHeader().setReorderingAllowed(false);
-		
-		
-//		GroupableTableHeader header = (GroupableTableHeader) getTableHeader();	
-//		ColumnGroup test = new ColumnGroup("test");
-//		test.add(this.getColumnModel().getColumn(0));
-//		test.add(this.getColumnModel().getColumn(1));
-//		header.addColumnGroup(test);
-//		this.setTableHeader(header);
-		
-		
+		this.setIntercellSpacing(new Dimension(2, 2));
+		this.setShowGrid(false);
+//		this.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
 //		this.addMouseListener(new MouseAdapter(){
 //
 //			@Override
@@ -72,7 +62,7 @@ public class MyTable extends JTable {
 //			}
 //			
 //		});
-//		this.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+		this.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		if(converter!=null)
 			updateContent(converter);
 		this.setUI(new MyTableUI());
@@ -175,7 +165,7 @@ public class MyTable extends JTable {
 		
 		BuilderRowHeader(topList2);
 		//because the paint process is executed row by row so the horizental span info must first be sorted.
-		Collections.sort(this.insertInfo, new Comparator<Object[]>() {
+		Collections.sort(this.rowTableTotalSpan, new Comparator<Object[]>() {
 			public int compare(Object[] o1,Object[] o2) {
 				int score1 = Integer.parseInt(o1[1].toString());
 				int score2 = Integer.parseInt(o2[1].toString());
@@ -188,13 +178,13 @@ public class MyTable extends JTable {
 			}
 		});
 //		
-		MyTableModel m2 = new MyTableModel(false,rowHead,rowTableData,this.insertInfo,MyTableModel.MODEL_TPE_ROW);
+		MyTableModel m2 = new MyTableModel(false,rowHead,rowTableData,this.rowTableTotalSpan,MyTableModel.MODEL_TPE_ROW);
 		//add vertical span
 		for(int[] spans:verticalSpanInfo){
 			m2.addSpan(spans[0], spans[1], spans[0]+spans[2]-1, spans[1]);
 		}
 		//add horizental span
-		for(Object[] horizentalSpan :this.insertInfo){
+		for(Object[] horizentalSpan :this.rowTableTotalSpan){
 			int y = Integer.parseInt(horizentalSpan[1].toString());
 			int x = Integer.parseInt(horizentalSpan[0].toString())-1;
 			String content = horizentalSpan[2].toString();
@@ -213,36 +203,58 @@ public class MyTable extends JTable {
 		 */
 		//prepare the new data array including total span row
 		String[][] oriDataArray = t.getResultsData();
-		String[][] newDataArray = new String[oriDataArray.length+this.insertInfo.size()][oriDataArray[0].length];
-		int dataSpanEnd = oriDataArray[0].length-1;
-		List<Integer> totalRowSpanList = new ArrayList<Integer>();
-		if(this.insertInfo.size()==0){
+		String[][] newDataArray = new String[oriDataArray.length+this.rowTableTotalSpan.size()][oriDataArray[0].length];
+
+		if(this.rowTableTotalSpan.size()==0){
 			newDataArray = oriDataArray;
 		}
 		else{
 			int spanIndex = 0;
 			int newDataArrayIndex = 0;
-			Object[] tmpSapn = this.insertInfo.get(spanIndex);
+			Object[] tmpSapn = this.rowTableTotalSpan.get(spanIndex);
+			List<Integer> sumColumnList = t.getSumColumns();
+			int sumScale = 0;
+			int[] tmpSumValue = new int[oriDataArray[0].length];
 			for(int i=0;newDataArrayIndex<newDataArray.length;newDataArrayIndex++){
 				if(newDataArrayIndex==Integer.parseInt(tmpSapn[0].toString())-1){
-					newDataArray[newDataArrayIndex][0] = "tobespaned";
-//					m.addSpan(newDataArrayIndex, 0, newDataArrayIndex,dataSpanEnd);
-					totalRowSpanList.add(newDataArrayIndex);
+//					newDataArray[newDataArrayIndex][0] = "tobespaned";
+					for(int sumColumnIndex:sumColumnList){
+						newDataArray[newDataArrayIndex][sumColumnIndex] = tmpSumValue[sumColumnIndex]+"";
+						if(Integer.parseInt(tmpSapn[1].toString())<=sumScale){
+							tmpSumValue[sumColumnIndex] = 0;
+							sumScale = Integer.parseInt(tmpSapn[1].toString());
+						}
+					}
+					totalRowSet.add(newDataArrayIndex);
 					spanIndex++;
-					if(spanIndex<this.insertInfo.size())
-						tmpSapn = this.insertInfo.get(spanIndex);
+					if(spanIndex<this.rowTableTotalSpan.size())
+						tmpSapn = this.rowTableTotalSpan.get(spanIndex);
 				}
 				else{
 					newDataArray[newDataArrayIndex] = oriDataArray[i];
+					for (int sumColumnIndex : sumColumnList) {
+						int addValue = 0;
+						try{
+							addValue = Integer.parseInt(oriDataArray[i][sumColumnIndex]);
+						}
+						catch(Exception e){
+						}
+						tmpSumValue[sumColumnIndex] = tmpSumValue[sumColumnIndex]+addValue;
+					}
 					i++;
 				}
 			}
 		}
 		m = new MyTableModel(false,t.getResultHead(),newDataArray,null,MyTableModel.MODEL_TPE_DATA);
-		for(int spanRowNo:totalRowSpanList){
-			m.addSpan(spanRowNo, 0, spanRowNo, dataSpanEnd);
-		}
+//		for(int spanRowNo:totalRowSpanList){
+//			m.addSpan(spanRowNo, 0, spanRowNo, dataSpanEnd);
+//		}
 		this.setModel(m);
+		for(int i=0;i<this.columnModel.getColumnCount();i++){
+			TableColumn tc = this.columnModel.getColumn(i);
+			tc.setCellRenderer(new MyCellRenderer());
+			tc.setHeaderRenderer(new MyHeaderRenderer());
+		}
 		List<HeadGroup> topList = hg.getNextOne(hg);
 		this.buildHeader(topList);
 		
@@ -251,6 +263,11 @@ public class MyTable extends JTable {
 		 */
 		JViewport v = (JViewport)this.fixTable.getParent();
 		v.remove(fixTable);
+		for(int i=0;i<spanedTable.columnModel.getColumnCount();i++){
+			TableColumn tc = spanedTable.columnModel.getColumn(i);
+			tc.setCellRenderer(new MyHeaderRenderer());
+		}
+		spanedTable.setIntercellSpacing(new Dimension(0,0));
 		v.setView(spanedTable);
 		v.setPreferredSize(spanedTable.getPreferredSize());
 		JScrollPane jp = (JScrollPane)v.getParent().getParent();
@@ -289,12 +306,12 @@ public class MyTable extends JTable {
 		}
 		centerTopPanel.setPreferredSize(new Dimension(0,prefredHeight));
 		
-		for(Object[] obj:this.insertInfo){
-			System.out.println("****************");
-			System.out.println(obj[0]);
-			System.out.println(obj[1]);
-			System.out.println(obj[2]);
-		}
+//		for(Object[] obj:this.rowTableTotalSpan){
+//			System.out.println("****************");
+//			System.out.println(obj[0]);
+//			System.out.println(obj[1]);
+//			System.out.println(obj[2]);
+//		}
 	}
 	
 	
@@ -308,6 +325,7 @@ public class MyTable extends JTable {
 	int verticalSpan = 0;
 	int rowCacuHeight = 0;
 	List<int[]> verticalSpanInfo = new ArrayList<int[]>();
+	HashSet<Integer> totalRowSet = new HashSet<Integer>();
 	
 	public void BuilderRowHeader(List<HeadGroup> topList2){
 		if(topList2==null)return;
@@ -331,7 +349,7 @@ public class MyTable extends JTable {
 				totalInfo[0] = span+spanRange;
 				totalInfo[1] = rowCacuHeight;
 				totalInfo[2] = "total of '"+p+"'";
-				this.insertInfo.add(totalInfo);
+				this.rowTableTotalSpan.add(totalInfo);
 			}
 			rowTableData[p.getParent().getExtraLine()+initLine][rowCacuHeight] = p.getValue();
 			p.setExtraLine(p.getParent().getExtraLine()+initLine);
@@ -383,7 +401,7 @@ public class MyTable extends JTable {
 	 * the total info to be inserted into the row header and data model
 	 * Object[]: 0. (int)height from where the total span start 1.(int) the start row index of the total span 2.(string) the content of the total like("total of ±±¾©µê")
 	 */
-	List<Object[]> insertInfo = new ArrayList<Object[]>();
+	List<Object[]> rowTableTotalSpan = new ArrayList<Object[]>();
 	
 	/*
 	 * Build column header and gather the total span rows info.
@@ -437,6 +455,9 @@ public class MyTable extends JTable {
 	public void foldup(){
 		setPreferredSize(super.getPreferredSize());
 	}
-	
+
+	public boolean getScrollableTracksViewportWidth() {
+		return getPreferredSize().width < getParent().getWidth();
+	}
 	
 }

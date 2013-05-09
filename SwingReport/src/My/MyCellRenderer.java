@@ -2,61 +2,29 @@ package My;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Graphics;
+import java.util.HashSet;
 
 import javax.swing.BorderFactory;
-import javax.swing.JComponent;
 import javax.swing.JTable;
-import javax.swing.JTextArea;
 import javax.swing.border.Border;
-import javax.swing.plaf.basic.BasicTextAreaUI;
-import javax.swing.table.TableCellRenderer;
+import javax.swing.table.DefaultTableCellRenderer;
 
-class MyCellRenderer extends JComponent  implements TableCellRenderer {
+class MyCellRenderer  extends DefaultTableCellRenderer {
 	Border unselectedBorder = null;
 	Border selectedBorder = null;
 	boolean isBordered = true;
-
-	public MyCellRenderer(boolean isBordered) {
-		this.isBordered = isBordered;
-//		setOpaque(true); // MUST do this for background to show up.
-	}
-
 	public Component getTableCellRendererComponent(JTable table, Object content, boolean isSelected, boolean hasFocus, int row, int column) {
-		MyTableModel myModel = (MyTableModel)table.getModel();
-		final boolean isSelectedf = isSelected; 
-		final String contentf = content.toString();
-//		JTextArea ren = new JTextArea(content+""+row+column);
-		JTextArea ren = new JTextArea(){
-			@Override
-			public void paintComponent(Graphics g) {
-				super.paintComponent(g);
-			}
-			
-		};
-		ren.setOpaque(true);
-		if(isSelected){
-			ren.setBackground(Color.CYAN);
+		MyTable my = (MyTable)table;
+		HashSet<Integer> set = my.totalRowSet;
+		Color oriColor = table.getBackground();
+		if(set.contains(row)){
+			this.setBackground(new Color(251,255,226));
 		}
-		ren.setText(content.toString());
-		ren.setBorder(BorderFactory.createEmptyBorder());
-		return ren;
-	}
-	
-	class MyTextUI extends BasicTextAreaUI{
-		@Override
-		public void update(Graphics g, JComponent c) {
-			if (c.isOpaque()) {
-				System.out.println("install");
-	            g.setColor(c.getBackground());
-	            g.fillRect(0, 0, c.getWidth(),c.getHeight()/2);
-	        }
-	        paint(g, c);
+		else{
+			this.setBackground(oriColor);
 		}
-		@Override
-	    protected void paintBackground(Graphics g) {
-	        
-	    }
-		
+		this.setBorder(BorderFactory.createEmptyBorder());
+		this.setText(content==null?"":content.toString());
+		return this;
 	}
 }

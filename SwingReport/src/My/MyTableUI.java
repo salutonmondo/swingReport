@@ -55,15 +55,14 @@ class MyTableUI extends BasicTableUI {
 
 		Color c = g.getColor();
 		g.setColor(table.getGridColor());
-		g.drawRect(area.x, area.y, area.width - 1, area.height - 1);
+		g.drawRect(area.x, area.y, area.width , area.height );
 		g.setColor(c);
 
 		area.setBounds(area.x + horizontalMargin / 2, area.y + verticalMargin
 				/ 2, area.width - horizontalMargin, area.height
 				- verticalMargin);
 
-		if (table.isEditing() && table.getEditingRow() == row
-				&& table.getEditingColumn() == column) {
+		if (table.isEditing() && table.getEditingRow() == row&& table.getEditingColumn() == column) {
 			Component component = table.getEditorComponent();
 			component.setBounds(area);
 			component.validate();
