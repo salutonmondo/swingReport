@@ -23,28 +23,6 @@ public class MyTableModel extends AbstractTableModel {
 		this.data = data;
 		this.showLineNumber = showLineNumber;
 		this.insertInfo = insertInfo;
-		
-//		if(insertInfo!=null){
-//			this.data = new Object[data.length+insertInfo.size()][this.data[0].length];
-//			if(modelType == 0){
-//				if(data[0].length==1)
-//					return;
-//				for(int k=0;k<data.length;k++){
-//					boolean same = false;
-//					for(int i=data[k].length;i>0;i--){
-//						if(data[i-1]==null){
-//							
-//						}
-//							
-//					}
-//				}
-//			}
-//			else{
-//				for(int i=0;i<data.length;i++){
-//					
-//				}
-//			}
-//		}
 	}
 
 	@Override

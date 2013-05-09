@@ -180,14 +180,14 @@ public class MyTable extends JTable {
 				int score1 = Integer.parseInt(o1[1].toString());
 				int score2 = Integer.parseInt(o2[1].toString());
 				if (score1 > score2)
-					return 1;
-				else if (score1 < score2)
 					return -1;
+				else if (score1 < score2)
+					return 1;
 				else
 					return 0;
 			}
 		});
-		
+//		
 		MyTableModel m2 = new MyTableModel(false,rowHead,rowTableData,this.insertInfo,MyTableModel.MODEL_TPE_ROW);
 		//add vertical span
 		for(int[] spans:verticalSpanInfo){
@@ -197,9 +197,12 @@ public class MyTable extends JTable {
 		for(Object[] horizentalSpan :this.insertInfo){
 			int y = Integer.parseInt(horizentalSpan[1].toString());
 			int x = Integer.parseInt(horizentalSpan[0].toString())-1;
+			String content = horizentalSpan[2].toString();
 			int end = m2.getColumnCount()-1;
 			m2.addSpan(x, y, x, end);
+			this.rowTableData[x][y] = content;
 		}
+		
 		MyTable spanedTable = new MyTable(m2,null,null);
 		JPanel leftCorner = new JPanel();
 		leftCorner.setLayout(null);
@@ -208,8 +211,37 @@ public class MyTable extends JTable {
 		/*
 		 * build the column table and the spaned table header
 		 */
-		
-		m = new MyTableModel(false,t.getResultHead(),t.getResultsData(),null,MyTableModel.MODEL_TPE_DATA);
+		//prepare the new data array including total span row
+		String[][] oriDataArray = t.getResultsData();
+		String[][] newDataArray = new String[oriDataArray.length+this.insertInfo.size()][oriDataArray[0].length];
+		int dataSpanEnd = oriDataArray[0].length-1;
+		List<Integer> totalRowSpanList = new ArrayList<Integer>();
+		if(this.insertInfo.size()==0){
+			newDataArray = oriDataArray;
+		}
+		else{
+			int spanIndex = 0;
+			int newDataArrayIndex = 0;
+			Object[] tmpSapn = this.insertInfo.get(spanIndex);
+			for(int i=0;newDataArrayIndex<newDataArray.length;newDataArrayIndex++){
+				if(newDataArrayIndex==Integer.parseInt(tmpSapn[0].toString())-1){
+					newDataArray[newDataArrayIndex][0] = "tobespaned";
+//					m.addSpan(newDataArrayIndex, 0, newDataArrayIndex,dataSpanEnd);
+					totalRowSpanList.add(newDataArrayIndex);
+					spanIndex++;
+					if(spanIndex<this.insertInfo.size())
+						tmpSapn = this.insertInfo.get(spanIndex);
+				}
+				else{
+					newDataArray[newDataArrayIndex] = oriDataArray[i];
+					i++;
+				}
+			}
+		}
+		m = new MyTableModel(false,t.getResultHead(),newDataArray,null,MyTableModel.MODEL_TPE_DATA);
+		for(int spanRowNo:totalRowSpanList){
+			m.addSpan(spanRowNo, 0, spanRowNo, dataSpanEnd);
+		}
 		this.setModel(m);
 		List<HeadGroup> topList = hg.getNextOne(hg);
 		this.buildHeader(topList);
@@ -264,6 +296,7 @@ public class MyTable extends JTable {
 			System.out.println(obj[2]);
 		}
 	}
+	
 	
 	/*
 	 * the global variable which be used to build column table header and the row header table
