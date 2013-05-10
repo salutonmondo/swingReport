@@ -1,13 +1,14 @@
 package dataTransform;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
+import java.util.Map.Entry;
 
 public class TransForm {
 
@@ -26,13 +27,15 @@ public class TransForm {
 	List<Integer> sumColumns = new ArrayList<Integer>();
 
 	public static void main(String args[]) {
+		HashSet<Integer> sumFields = new HashSet<Integer>();
+		sumFields.add(2);
 		TransForm t = new TransForm(new String[] { "月份", "店铺", "销售", "商品" },
 				new String[][] { { "1", "上海店", "800", "A05" },
 						{ "1", "上海店", "900", "A04" },
 						{ "2", "上海店", "900", "A05" },
 						{ "1", "北京店", "400", "A05" },
 						{ "2", "北京店", "300", "A05" },
-						{ "3", "北京店", "700", "A05" }},null);
+						{ "3", "北京店", "700", "A05" }},sumFields);
 
 		ArrayList<Integer> list = new ArrayList<Integer>();
 		list.add(0);
@@ -198,6 +201,7 @@ public class TransForm {
 		}
 		
 		root.next(root);
+		root.sort(root);
 		root.degree = degree;
 		root.height = height;
 		System.out.println("the height is "+root.height+" the degree is "+root.degree);
@@ -238,7 +242,7 @@ public class TransForm {
 		}
 	}
 
-	public class HeadGroup {
+	public class HeadGroup{
 		LinkedHashMap<String, HeadGroup> hash = null;
 		String value;
 		LinkedHashMap<Integer, Integer> hash2 = null;
@@ -248,6 +252,8 @@ public class TransForm {
         int height=0;
         int baseLine = 0;
         int extraLine = 0;
+        //the row or data header range, 0:start no 1:end no.
+        int[] range = new int[2];
 		public void addSelf(Object obj) {
 			if (obj instanceof int[]) {
 				if (hash2 == null)
@@ -264,11 +270,19 @@ public class TransForm {
 		}
 
 		
+		
+		public int[] getRange() {
+			return range;
+		}
+
+		public void setRange(int[] range) {
+			this.range = range;
+		}
+
 		public int getDegree() {
 			return degree;
 		}
-
-
+		
 		public String getValue() {
 			return value;
 		}
@@ -350,6 +364,33 @@ public class TransForm {
 			}
 			return nextList;
 		}
+		
+		public void sort(HeadGroup p){
+			if(p.hash!=null){
+				//sort Headgroup's hash
+				LinkedList<Map.Entry<String,HeadGroup>> lkl = new LinkedList<Map.Entry<String,HeadGroup>>(p.hash.entrySet());
+				Collections.sort(lkl, new Comparator<Map.Entry<String, HeadGroup>>() {
+					@Override
+					public int compare(Entry<String, HeadGroup> o1,
+							Entry<String, HeadGroup> o2) {
+						return -(compareArray(o1.getKey().getBytes(),o2.getKey().getBytes()));
+					}
+				});
+				p.hash.clear();
+				for(Map.Entry<String,HeadGroup> ent:lkl){
+//					System.out.println("+++++++++++++"+ent.getKey());
+					p.hash.put(ent.getKey(), ent.getValue());
+				}
+				
+				for(Map.Entry<String, HeadGroup> ent:p.hash.entrySet()){
+					if(ent.getValue().hash!=null){
+						sort(ent.getValue());
+					}
+				}
+			}
+		}
+		
+		
 
 		public HeadGroup getParent() {
 			return parent;
@@ -380,7 +421,28 @@ public class TransForm {
 			this.extraLine = extraLine;
 		}
 		
-		
+		public  int compareArray(byte[] b1,byte[] b2){
+			int length = Math.min(b1.length, b2.length);
+			for(int i=0;i<length;i++){
+				if(b1[i]<0||b2[i]<0){
+					if(b1[i]>0)
+						b1[i]=(byte) -b1[i];
+					if(b2[i]>0)
+						b2[i]=(byte) -b2[i];	
+				}
+				if(b1[i]>b2[i])
+					return -1;
+				else if(b1[i]<b2[i])
+					return 1;
+				if(i==length-1){
+					if(b1.length>b2.length)
+						return -1;
+					else
+					    return 1;
+				}
+			}
+			return 0;
+		}
 		
 	}
 

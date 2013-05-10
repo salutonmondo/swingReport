@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 
-import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -275,7 +274,7 @@ public class MyTable extends JTable {
 		JTableHeader leftTableHeader = spanedTable.getTableHeader();
 		int leftOffSet = 0;
 		for(int rowIndex = 0;rowIndex<t.getRowItem().size();rowIndex++){
-			JButton jb = new JButton(t.getOriHead()[t.getRowItem().get(rowIndex)]);
+			MyButton jb = new MyButton(t.getOriHead()[t.getRowItem().get(rowIndex)]);
 			int width = leftTableHeader.getColumnModel().getColumn(rowIndex).getPreferredWidth();
 			Dimension oriD = jb.getPreferredSize();
 			jb.setBackground(Main.bgColor);
@@ -295,7 +294,7 @@ public class MyTable extends JTable {
 		int leftOffSet2 = spanedTable.getPreferredSize().width;
 		int prefredHeight = 0;
 		for(int colIndex = 0;colIndex<t.getColItem().size();colIndex++){
-			JButton jb = new JButton(t.getOriHead()[t.getColItem().get(colIndex)]);
+			MyButton jb = new MyButton(t.getOriHead()[t.getColItem().get(colIndex)]);
 			Dimension oriD = jb.getPreferredSize();
 			jb.setBackground(Main.bgColor);
 			leftCorner.add(jb);
@@ -319,7 +318,7 @@ public class MyTable extends JTable {
 	 * the global variable which be used to build column table header and the row header table
 	 */
 	HashMap<String, ColumnGroup> lastColumnGroups = new HashMap<String, ColumnGroup>();
-	StringBuilder parentKey = new StringBuilder();
+	String parentKey = "" ;
 	String[][] rowTableData;
 	String[] rowHead;
 	int verticalSpan = 0;
@@ -348,11 +347,13 @@ public class MyTable extends JTable {
 				Object[] totalInfo = new Object[3];
 				totalInfo[0] = span+spanRange;
 				totalInfo[1] = rowCacuHeight;
-				totalInfo[2] = "total of '"+p+"'";
+				totalInfo[2] = p+" total";
 				this.rowTableTotalSpan.add(totalInfo);
 			}
 			rowTableData[p.getParent().getExtraLine()+initLine][rowCacuHeight] = p.getValue();
 			p.setExtraLine(p.getParent().getExtraLine()+initLine);
+			int[] headGroupRange = new int[]{span,span+spanRange};
+			p.setRange(headGroupRange);
 			span = span+spanRange;
 			initLine = initLine+spanRange;
 			if(sp!=null)
@@ -426,9 +427,10 @@ public class MyTable extends JTable {
 //				System.out.println("3:" + parent.text+" add "+ sub.text);
 				parent.add(sub);
 				last = sub;
-				parentKey.append(sub.text);
+//				parentKey.append(sub.text);
+				parentKey = sub.text+parentKey;
 				tmpLastColumnGroups.put(parentKey.toString(), sub);
-				parentKey = new StringBuilder();
+				parentKey = "";
 			}
 			if (p.getHash2() != null) {
 				for (int j=0;j<p.getHash2().size();j++) {
@@ -448,7 +450,7 @@ public class MyTable extends JTable {
 	public void getParentsKey(HeadGroup p) {
 		if (p.getParent().getValue().equals("root"))
 			return;
-		parentKey.append(p.getParent().getValue());
+		parentKey = parentKey+(p.getParent().getValue());
 		getParentsKey(p.getParent());
 	}
 	
