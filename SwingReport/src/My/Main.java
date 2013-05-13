@@ -53,7 +53,7 @@ public class Main extends JFrame {
 		String[][] data = new String[][] { { "1", "上海店", "800", "A05","red" },{ "1", "上海店", "800", "A05","yellow" },
 				{ "1", "上海店", "900", "A04","red" }, { "2", "上海店", "900", "A05" ,"yellow"},
 				{ "1", "北京店", "400", "A05" ,"red"}, { "2", "北京店", "300", "A05","yellow" },
-				{ "3", "北京店", "700", "A05" ,"red"} };
+				{ "3", "北京店", "700", "A05" ,"red"},{ "1", "北京店", "200", "A05" ,"yellow"} };
 		String[] head = new String[] { "月份", "店铺", "销售", "商品","颜色" };
 		js = new JScrollPane();
 		HashSet<Integer> sumFields = new HashSet<Integer>();

@@ -373,7 +373,7 @@ public class TransForm {
 					@Override
 					public int compare(Entry<String, HeadGroup> o1,
 							Entry<String, HeadGroup> o2) {
-						return -(compareArray(o1.getKey().getBytes(),o2.getKey().getBytes()));
+						return (compareArray(o1.getKey().getBytes(),o2.getKey().getBytes()));
 					}
 				});
 				p.hash.clear();

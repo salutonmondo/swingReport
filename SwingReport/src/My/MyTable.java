@@ -166,12 +166,12 @@ public class MyTable extends JTable {
 		//because the paint process is executed row by row so the horizental span info must first be sorted.
 		Collections.sort(this.rowTableTotalSpan, new Comparator<Object[]>() {
 			public int compare(Object[] o1,Object[] o2) {
-				int score1 = Integer.parseInt(o1[1].toString());
-				int score2 = Integer.parseInt(o2[1].toString());
+				int score1 = Integer.parseInt(o1[0].toString());
+				int score2 = Integer.parseInt(o2[0].toString());
 				if (score1 > score2)
-					return -1;
-				else if (score1 < score2)
 					return 1;
+				else if (score1 < score2)
+					return -1;
 				else
 					return 0;
 			}
@@ -203,7 +203,7 @@ public class MyTable extends JTable {
 		//prepare the new data array including total span row
 		String[][] oriDataArray = t.getResultsData();
 		String[][] newDataArray = new String[oriDataArray.length+this.rowTableTotalSpan.size()][oriDataArray[0].length];
-
+		HashMap<Integer,int[]> scaleTotalMap = new HashMap<Integer,int[]>();
 		if(this.rowTableTotalSpan.size()==0){
 			newDataArray = oriDataArray;
 		}
@@ -213,24 +213,42 @@ public class MyTable extends JTable {
 			Object[] tmpSapn = this.rowTableTotalSpan.get(spanIndex);
 			List<Integer> sumColumnList = t.getSumColumns();
 			int sumScale = 0;
-			int[] tmpSumValue = new int[oriDataArray[0].length];
 			for(int i=0;newDataArrayIndex<newDataArray.length;newDataArrayIndex++){
+				sumScale = breakMap.get(newDataArrayIndex+1);
+				int []tmpArray = scaleTotalMap.get(sumScale+1);
+				int tmpSumTotal[] = new int[oriDataArray[0].length];
+				int tmpSumTotalIndex = 0;
 				if(newDataArrayIndex==Integer.parseInt(tmpSapn[0].toString())-1){
-//					newDataArray[newDataArrayIndex][0] = "tobespaned";
 					for(int sumColumnIndex:sumColumnList){
-						newDataArray[newDataArrayIndex][sumColumnIndex] = tmpSumValue[sumColumnIndex]+"";
-						if(Integer.parseInt(tmpSapn[1].toString())<=sumScale){
-							tmpSumValue[sumColumnIndex] = 0;
-							sumScale = Integer.parseInt(tmpSapn[1].toString());
-						}
+						newDataArray[newDataArrayIndex][sumColumnIndex] = tmpArray[sumColumnIndex]+"";
+						tmpSumTotal[tmpSumTotalIndex]= tmpArray[sumColumnIndex];
+						tmpSumTotalIndex++;
 					}
+					int[] selfTotal = scaleTotalMap.get(sumScale);
+					if(selfTotal!=null){
+						for(int z=0;z<selfTotal.length;z++){
+							selfTotal[z] = tmpArray[z]+selfTotal[z];
+						}
+						scaleTotalMap.put(sumScale, selfTotal);
+					}
+					else{
+						scaleTotalMap.put(sumScale, tmpSumTotal);
+					}
+					
 					totalRowSet.add(newDataArrayIndex);
 					spanIndex++;
 					if(spanIndex<this.rowTableTotalSpan.size())
 						tmpSapn = this.rowTableTotalSpan.get(spanIndex);
+
+					int[] emptyArray = new int[oriDataArray[0].length];
+					scaleTotalMap.put(sumScale+1, emptyArray);
 				}
 				else{
 					newDataArray[newDataArrayIndex] = oriDataArray[i];
+					int[] sumArray = scaleTotalMap.get(sumScale);
+					if(sumArray == null){
+						sumArray = new int[oriDataArray[0].length];
+					}
 					for (int sumColumnIndex : sumColumnList) {
 						int addValue = 0;
 						try{
@@ -238,8 +256,9 @@ public class MyTable extends JTable {
 						}
 						catch(Exception e){
 						}
-						tmpSumValue[sumColumnIndex] = tmpSumValue[sumColumnIndex]+addValue;
+						sumArray[sumColumnIndex] = sumArray[sumColumnIndex]+addValue;
 					}
+					scaleTotalMap.put(sumScale, sumArray);
 					i++;
 				}
 			}
@@ -325,10 +344,11 @@ public class MyTable extends JTable {
 	int rowCacuHeight = 0;
 	List<int[]> verticalSpanInfo = new ArrayList<int[]>();
 	HashSet<Integer> totalRowSet = new HashSet<Integer>();
+	HashMap<Integer,Integer> breakMap = new HashMap<Integer,Integer>();
 	
 	public void BuilderRowHeader(List<HeadGroup> topList2){
 		if(topList2==null)return;
-		int span=0;
+//		int span=0;
 		int initLine = 0;
 		for (HeadGroup p : topList2) {
 			this.getRowSpanIncludeTotal(p);
@@ -341,20 +361,27 @@ public class MyTable extends JTable {
 			int[] sp =null;
 			if(spanRange>1){
 				sp = new int[3];
-				sp[0] = span;
+//				sp[0] = span;
+				sp[0] = p.getParent().getExtraLine()+initLine;
 				sp[1] = rowCacuHeight;
 				sp[2] = spanRange-1;
 				Object[] totalInfo = new Object[3];
-				totalInfo[0] = span+spanRange;
+//				totalInfo[0] = span+spanRange;
+				totalInfo[0] = p.getParent().getExtraLine()+initLine+spanRange;
 				totalInfo[1] = rowCacuHeight;
 				totalInfo[2] = p+" total";
 				this.rowTableTotalSpan.add(totalInfo);
+				
+				breakMap.put(p.getParent().getExtraLine()+initLine+spanRange, rowCacuHeight);
 			}
+			if(breakMap.get(p.getParent().getExtraLine()+initLine+spanRange)==null)
+				breakMap.put(p.getParent().getExtraLine()+initLine+spanRange,rowCacuHeight);
+			
 			rowTableData[p.getParent().getExtraLine()+initLine][rowCacuHeight] = p.getValue();
 			p.setExtraLine(p.getParent().getExtraLine()+initLine);
-			int[] headGroupRange = new int[]{span,span+spanRange};
-			p.setRange(headGroupRange);
-			span = span+spanRange;
+//			int[] headGroupRange = new int[]{span,span+spanRange};
+//			p.setRange(headGroupRange);
+//			span = span+spanRange;
 			initLine = initLine+spanRange;
 			if(sp!=null)
 				verticalSpanInfo.add(sp);
