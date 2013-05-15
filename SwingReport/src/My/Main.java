@@ -65,8 +65,7 @@ public class Main extends JFrame {
 		viewport.setView(tmp);
 		viewport.setPreferredSize(new Dimension(0, 0));
 		js.setRowHeaderView(viewport);
-		jt = new MyTable(model, converter,tmp);
-		
+		jt = new MyTable(model, converter,tmp);		
 		js.setViewportView(jt);
 		js.setBackground(bgColor);
 		js.setBorder(BorderFactory.createEmptyBorder());
@@ -83,7 +82,6 @@ public class Main extends JFrame {
 		centerPanel.add(centerTopPanel,BorderLayout.NORTH);
 		centerPanel.setBackground(bgColor);
 		centerPanel.add(js, BorderLayout.CENTER);
-		
 		this.add(centerPanel, BorderLayout.CENTER);
 		
 		JPanel jp = new JPanel();

@@ -10,6 +10,12 @@ import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
@@ -19,6 +25,9 @@ import javax.swing.plaf.basic.BasicGraphicsUtils;
 
 import com.sun.java.swing.plaf.windows.WindowsButtonUI;
 import com.sun.java.swing.plaf.windows.WindowsGraphicsUtils;
+
+import dataTransform.TransForm;
+import dataTransform.TransForm.HeadGroup;
 
 public class MyButton extends JButton {
 
@@ -32,20 +41,28 @@ public class MyButton extends JButton {
 	Polygon ext;
 	Rectangle extSensor = new Rectangle();
 	boolean hovered = false;
-
-	public MyButton(String text) {
+	TransForm t ;
+	int type;// 0 for col Group 1 for row group
+	MyTable mytable;
+	int buttonIndex;
+	public MyButton(String text,TransForm t,int type,MyTable mytable,final int headIndex) {
 		super(text);
+		this.t = t;
+		this.type = type;
+		this.mytable = mytable;
+		this.buttonIndex = headIndex;
 		// this.add(extArea);
 		this.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 				if (!extSensor.contains(e.getX(), e.getY()))
 					if (sort == 1)
-						sort = 0;
+						sort = -1;
 					else {
 						sort = 1;
 					}
 				e.consume();
+				applySort(sort);
 			}
 		});
 		this.addMouseMotionListener(new MouseAdapter() {
@@ -62,7 +79,37 @@ public class MyButton extends JButton {
 			}
 		});
 	}
+	
+	public void applySort(int sort){
+		HeadGroup rootGroup;
+		if(this.type==0){
+			rootGroup = t.getColG();
+		}
+		else{
+			rootGroup = t.getRowG();
+		}
+		t.type = this.type;
+		cleanRowSpanInfo(rootGroup);
+		t.applySort(rootGroup,true,this.buttonIndex,this.sort);
+		mytable.updateContent(t,true,type);
+	}
 
+	public void cleanRowSpanInfo(final HeadGroup p){
+		for(Map.Entry<String, HeadGroup> ent:p.getHash().entrySet()){
+			HeadGroup subGroup = ent.getValue();
+			subGroup.setBaseLine(0);
+			subGroup.setExtraLine(0);
+			if(subGroup.getHash2()!=null){
+				subGroup.setHash2(new LinkedHashMap<Integer,Integer>());
+			}
+			if(subGroup.getHash()!=null){
+				cleanRowSpanInfo(subGroup);
+			}
+		}
+		
+	}
+	
+	
 	public void updateUI() {
 		setUI(new MyButtonUI());
 		// setUI(new WindowsButtonUI());
@@ -70,7 +117,7 @@ public class MyButton extends JButton {
 
 	public static void main(String args[]) {
 		JFrame jf = new JFrame();
-		MyButton my = new MyButton("test");
+		MyButton my = new MyButton("test",null,0,null,0);
 		jf.add(my);
 		jf.pack();
 		jf.setVisible(true);
@@ -98,7 +145,7 @@ public class MyButton extends JButton {
 			int p1x = x1 - 3;
 			int p2x = x1 + 3;
 			int py = y2 - (y2 - y1) / 2;
-			if (sort == 0) {
+			if (sort == 1) {
 				g2d.drawLine(p1x, py, x2, y2);
 				g2d.drawLine(p2x, py, x2, y2);
 			} else {

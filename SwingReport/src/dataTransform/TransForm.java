@@ -90,13 +90,16 @@ public class TransForm {
 			return ;
 		}
 		colG = construct2(colItem,0);
-		rowG = construct2(rowItem,1);
+		rowG = construct2(rowItem,1);	
+		generateArray();
+	}
+	
+	public void generateArray(){
 		resultsData = new String[rowG.degree][colG.degree];
 		String[] rowNavi = new String[rowG.height];
 		int lastRowIndex = this.rowItem.get(this.rowItem.size()-1);
 		String[] colNavi = new String[colG.height];
 		for(int k=0;k<this.oriData.length;k++){
-			
 			int rowCount = 0;
 			for(int rowNo: rowItem){
 				rowNavi[rowCount] = oriData[k][rowNo];
@@ -132,19 +135,14 @@ public class TransForm {
 				}
 				this.resultsData[r][c]=content;
 			}
-		}		
+		}	
 	}
 	
 	public HeadGroup construct2(List<Integer> items,int type) {
 		HashSet<String> navSet = new HashSet<String>();
 		HeadGroup root = new HeadGroup("root");
 		root.hash = new LinkedHashMap<String,HeadGroup>();
-		int resultIndex = 0;
-		int degree = 0;
 		boolean heightCaculated = false;
-		int height = 0;
-		int lastRowIndex = items.get(items.size()-1);
-		
 		for(String[] s:this.oriData){
 			StringBuilder sb = new StringBuilder();
 			for(int row:items){
@@ -154,9 +152,7 @@ public class TransForm {
 //			System.out.println(sb);
 			if(navSet.add(sb.toString())){
 				HeadGroup parent = root;
-				int count =0;
 				for(int row:items){
-					count++;
 					HeadGroup sub = new HeadGroup(s[row]);
 					if(parent.hash ==null)
 						parent.setHash(new LinkedHashMap<String,HeadGroup>());
@@ -170,30 +166,6 @@ public class TransForm {
 						parent = parent.hash.get(sub.getValue());
 //						continue;
 					}
-					
-					//the last group add data item
-					if (count == items.size()) {
-						if (type == 0) {
-							for (int dataIndex : this.dataItem) {
-								if (sub.hash2 == null)
-									sub.hash2 = new LinkedHashMap<Integer, Integer>();
-								sub.hash2.put(dataIndex,resultIndex);
-								this.headList.add(this.oriHead[dataIndex]);
-								if(this.sumField.contains(dataIndex)){
-									this.sumColumns.add(this.headList.size()-1);
-								}
-								resultIndex++;
-								degree++;
-							}
-						} else {
-							if (sub.hash2 == null)
-								sub.hash2 = new LinkedHashMap<Integer, Integer>();
-							sub.hash2.put(lastRowIndex,resultIndex);
-							resultIndex++;
-							degree++;
-						}
-					}
-					
 				}
 			};
 			
@@ -201,25 +173,154 @@ public class TransForm {
 		}
 		
 		root.next(root);
-		root.sort(root);
+		this.type = type;
+		applySort(root,false,0,0);
+		return root;
+	}
+
+	int height;
+	public int type;
+	public void applySort(HeadGroup root,boolean isSort,int buttonIndex,int sortOrder){
+		if(!isSort){
+			defaultAllSort(root);
+		}
+		else{
+			sort(root,buttonIndex,sortOrder,0,null);
+		}
+		this.rearrangeLeafies(root, type);
+		if(isSort){
+			if(this.type==1){
+				this.rowG = root;
+			}
+			else{
+				this.colG = root;
+			}
+			this.generateArray();
+		}
+		
 		root.degree = degree;
-		root.height = height;
+		if(!isSort)
+			root.height = height;
 		System.out.println("the height is "+root.height+" the degree is "+root.degree);
 		for(HeadGroup p:root.list){
 			System.out.println(p);
 		}
-////		
 		if(type==0){
 			this.resultHead = new String[degree];
 			for(int i = 0;i<this.headList.size();i++){
 				this.resultHead[i] = this.headList.get(i);
 			}
 		}
-		return root;
+		degree=0;
+		rearrangeIndex=0;
+		if(!isSort)
+			height =0;
+	}
+	public int rearrangeIndex = 0;
+	public int degree = 0;
+	public void rearrangeLeafies(HeadGroup p, int groupType) {
+		for (Map.Entry<String, HeadGroup> ent : p.hash.entrySet()) {
+			if (ent.getValue().hash != null) {
+				rearrangeLeafies(ent.getValue(), groupType);
+			}
+			else{
+				
+			HeadGroup last = ent.getValue();
+			System.out.println("<<<<<<<"+last);
+			if (groupType == 0) {
+				for (int dataIndex : this.dataItem) {
+					if (last.hash2 == null)
+						last.hash2 = new LinkedHashMap<Integer, Integer>();
+					last.hash2.put(dataIndex, rearrangeIndex);
+					this.headList.add(this.oriHead[dataIndex]);
+					if (this.sumField.contains(dataIndex)) {
+						this.sumColumns.add(this.headList.size() - 1);
+					}
+					rearrangeIndex++;
+					degree++;
+				}
+			} else {
+				 if (last.hash2 == null)
+					 last.hash2 = new LinkedHashMap<Integer, Integer>();
+//				 System.out.println("cccccccccccc"+last);
+				 last.hash2.put(this.rowItem.get(this.rowItem.size()-1),rearrangeIndex);
+				 rearrangeIndex++;
+				 degree++; 
+			}
+		}
+		}
+	}
+
+
+	public void defaultAllSort(final HeadGroup p){
+		if(p.hash!=null){
+			//sort Headgroup's hash
+			subSortSingle(p,1);
+			for(Map.Entry<String, HeadGroup> ent:p.hash.entrySet()){
+				if(ent.getValue().hash!=null){
+					defaultAllSort(ent.getValue());
+				}
+			}
+		}
 	}
 	
+	public void sort(HeadGroup root,int buttonIndex,int sortOrder,int iteration,List<HeadGroup> groups){
+		if(buttonIndex == 0){
+			subSortSingle(root,sortOrder);
+			return ;
+		}else if(buttonIndex == iteration){
+			subSort(groups,sortOrder);
+		}
+		else{
+			iteration++;
+			sort(null,buttonIndex,sortOrder,iteration,root.getNext(groups));
+		}
+	}
 	
-
+	public void subSort(List<HeadGroup> groups,  int sortOrder) {
+		for (HeadGroup group : groups) {
+			subSortSingle(group,sortOrder);
+		}
+	}
+	
+	public void subSortSingle(HeadGroup root, final int sortOrder) {
+		LinkedList<Map.Entry<String,HeadGroup>> lkl = new LinkedList<Map.Entry<String,HeadGroup>>(root.hash.entrySet());
+		Collections.sort(lkl, new Comparator<Map.Entry<String, HeadGroup>>() {
+			@Override
+			public int compare(Entry<String, HeadGroup> o1,
+					Entry<String, HeadGroup> o2) {
+				return sortOrder*(compareArray(o1.getKey().getBytes(),o2.getKey().getBytes()));
+			}
+		});
+		root.hash.clear();
+		for(Map.Entry<String,HeadGroup> ent:lkl){
+			root.hash.put(ent.getKey(), ent.getValue());
+		}
+	}
+	
+	public  int compareArray(byte[] b1,byte[] b2){
+		int length = Math.min(b1.length, b2.length);
+		for(int i=0;i<length;i++){
+			if(b1[i]<0||b2[i]<0){
+				if(b1[i]>0)
+					b1[i]=(byte) -b1[i];
+				if(b2[i]>0)
+					b2[i]=(byte) -b2[i];	
+			}
+			if(b1[i]>b2[i])
+				return -1;
+			else if(b1[i]<b2[i])
+				return 1;
+			if(i==length-1){
+				if(b1.length>b2.length)
+					return -1;
+				else
+				    return 1;
+			}
+		}
+		return 0;
+	}
+	
 	
 	public void addRowItems(List<Integer> rowList) {
 		rowItem.addAll(rowList);
@@ -252,6 +353,7 @@ public class TransForm {
         int height=0;
         int baseLine = 0;
         int extraLine = 0;
+        int sortOrder = -1;// -1 for ascent 1 for decent   
         //the row or data header range, 0:start no 1:end no.
         int[] range = new int[2];
 		public void addSelf(Object obj) {
@@ -364,33 +466,6 @@ public class TransForm {
 			}
 			return nextList;
 		}
-		
-		public void sort(HeadGroup p){
-			if(p.hash!=null){
-				//sort Headgroup's hash
-				LinkedList<Map.Entry<String,HeadGroup>> lkl = new LinkedList<Map.Entry<String,HeadGroup>>(p.hash.entrySet());
-				Collections.sort(lkl, new Comparator<Map.Entry<String, HeadGroup>>() {
-					@Override
-					public int compare(Entry<String, HeadGroup> o1,
-							Entry<String, HeadGroup> o2) {
-						return (compareArray(o1.getKey().getBytes(),o2.getKey().getBytes()));
-					}
-				});
-				p.hash.clear();
-				for(Map.Entry<String,HeadGroup> ent:lkl){
-//					System.out.println("+++++++++++++"+ent.getKey());
-					p.hash.put(ent.getKey(), ent.getValue());
-				}
-				
-				for(Map.Entry<String, HeadGroup> ent:p.hash.entrySet()){
-					if(ent.getValue().hash!=null){
-						sort(ent.getValue());
-					}
-				}
-			}
-		}
-		
-		
 
 		public HeadGroup getParent() {
 			return parent;
@@ -421,27 +496,12 @@ public class TransForm {
 			this.extraLine = extraLine;
 		}
 		
-		public  int compareArray(byte[] b1,byte[] b2){
-			int length = Math.min(b1.length, b2.length);
-			for(int i=0;i<length;i++){
-				if(b1[i]<0||b2[i]<0){
-					if(b1[i]>0)
-						b1[i]=(byte) -b1[i];
-					if(b2[i]>0)
-						b2[i]=(byte) -b2[i];	
-				}
-				if(b1[i]>b2[i])
-					return -1;
-				else if(b1[i]<b2[i])
-					return 1;
-				if(i==length-1){
-					if(b1.length>b2.length)
-						return -1;
-					else
-					    return 1;
-				}
-			}
-			return 0;
+		public int getSortOrder() {
+			return sortOrder;
+		}
+
+		public void setSortOrder(int sortOrder) {
+			this.sortOrder = sortOrder;
 		}
 		
 	}

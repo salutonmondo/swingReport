@@ -141,7 +141,7 @@ public class CustomPanel extends JPanel implements DropTargetListener{
 				deletItems(converter.getColItem(),colNo	);
 			}
 			
-			((MyTable)table).updateContent(converter);
+			((MyTable)table).updateContent(converter,false,0);
 			
 			/*
 			 * remove the label by double click;
