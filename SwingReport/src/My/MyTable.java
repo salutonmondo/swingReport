@@ -162,9 +162,10 @@ public class MyTable extends JTable {
 		}
 //		rowTableData = new String[rg.getDegree()][rg.getHeight()];
 		rowTableData = new String[rowHeaderRows][rg.getHeight()];
-		BuilderRowHeaderClean();
-		BuilderRowHeader(topList2);
-		
+		if(!isSort||sortType==1){
+			BuilderRowHeaderClean();
+			BuilderRowHeader(topList2);
+		}
 		//because the paint process is executed row by row so the horizental span info must first be sorted.
 		Collections.sort(this.rowTableTotalSpan, new Comparator<Object[]>() {
 			public int compare(Object[] o1,Object[] o2) {
@@ -286,22 +287,25 @@ public class MyTable extends JTable {
 		 * set the upper-left corner header
 		 */
 		JViewport v = (JViewport)this.fixTable.getParent();
-		v.remove(fixTable);
-		
-		for(int i=0;i<spanedTable.columnModel.getColumnCount();i++){
-			TableColumn tc = spanedTable.columnModel.getColumn(i);
-			tc.setCellRenderer(new MyHeaderRenderer());
+		if(!isSort||sortType==1){
+			v.remove(fixTable);
+			for(int i=0;i<spanedTable.columnModel.getColumnCount();i++){
+				TableColumn tc = spanedTable.columnModel.getColumn(i);
+				tc.setCellRenderer(new MyHeaderRenderer());
+			}
+			spanedTable.setIntercellSpacing(new Dimension(0,0));
+			v.setView(spanedTable);
+			this.fixTable = spanedTable;
+			v.setPreferredSize(spanedTable.getPreferredSize());
 		}
-		spanedTable.setIntercellSpacing(new Dimension(0,0));
-		v.setView(spanedTable);
-		this.fixTable = spanedTable;
-		v.setPreferredSize(spanedTable.getPreferredSize());
 		
 		builderButtonHeader(v,header,spanedTable,t,isSort);
 	}
 	
 	
 	JPanel leftCorner = new JPanel();;
+	
+	
 	public void builderButtonHeader(JViewport v,GroupableTableHeader header,MyTable spanedTable,TransForm t,boolean isSort){
 		JScrollPane jp = (JScrollPane)v.getParent().getParent();
 		int cornerHeight = ((GroupableTableHeaderUI)header.getUI()).getHeaderHeight();

@@ -179,14 +179,24 @@ public class TransForm {
 	}
 
 	int height;
-	public int type;
+	public int type = 2;
 	public void applySort(HeadGroup root,boolean isSort,int buttonIndex,int sortOrder){
 		if(!isSort){
 			defaultAllSort(root);
 		}
 		else{
-			sort(root,buttonIndex,sortOrder,0,null);
+			sort(root,buttonIndex,sortOrder);
 		}
+		
+		
+		if(this.type ==0){
+			rearrangeIndex = 0;
+			degree=0;
+			this.headList.clear();
+			this.sumColumns.clear();
+		}
+		
+		
 		this.rearrangeLeafies(root, type);
 		if(isSort){
 			if(this.type==1){
@@ -205,7 +215,7 @@ public class TransForm {
 		for(HeadGroup p:root.list){
 			System.out.println(p);
 		}
-		if(type==0){
+		if(type==0&&(!isSort)){
 			this.resultHead = new String[degree];
 			for(int i = 0;i<this.headList.size();i++){
 				this.resultHead[i] = this.headList.get(i);
@@ -224,9 +234,8 @@ public class TransForm {
 				rearrangeLeafies(ent.getValue(), groupType);
 			}
 			else{
-				
 			HeadGroup last = ent.getValue();
-			System.out.println("<<<<<<<"+last);
+//			System.out.println("<<<<<<<"+last);
 			if (groupType == 0) {
 				for (int dataIndex : this.dataItem) {
 					if (last.hash2 == null)
@@ -264,18 +273,28 @@ public class TransForm {
 		}
 	}
 	
-	public void sort(HeadGroup root,int buttonIndex,int sortOrder,int iteration,List<HeadGroup> groups){
+//	public void sort(HeadGroup root,int buttonIndex,int sortOrder,int iteration,List<HeadGroup> groups){
+//		if(buttonIndex == 0){
+//			subSortSingle(root,sortOrder);
+//			return ;
+//		}else if(buttonIndex == iteration){
+//			subSort(groups,sortOrder);
+//		}
+//		else{
+//			iteration++;
+//			sort(null,buttonIndex,sortOrder,iteration,root.getNext(groups));
+//		}
+//	}
+	
+	public void sort(HeadGroup root,int buttonIndex,int sortOrder){
 		if(buttonIndex == 0){
 			subSortSingle(root,sortOrder);
-			return ;
-		}else if(buttonIndex == iteration){
-			subSort(groups,sortOrder);
 		}
 		else{
-			iteration++;
-			sort(null,buttonIndex,sortOrder,iteration,root.getNext(groups));
+			subSort(root.gethlByDegree(buttonIndex, root),sortOrder);
 		}
 	}
+	
 	
 	public void subSort(List<HeadGroup> groups,  int sortOrder) {
 		for (HeadGroup group : groups) {
@@ -465,6 +484,25 @@ public class TransForm {
 				}
 			}
 			return nextList;
+		}
+		
+		public List<HeadGroup> gethlByDegree(int degree,HeadGroup g){
+			if(degree==1){
+				return getNextOne(g);
+			}
+			else return gethlByDegree(degree,getNextOne(g));
+		}
+		
+		private List<HeadGroup> gethlByDegree(int degree,List<HeadGroup> list){
+			List<HeadGroup> tmpList = list;
+			int count = 0;
+			while(true){
+				tmpList = this.getNext(tmpList);
+				if((count+2)==degree)
+					break;
+				count++;
+			}
+			return tmpList;
 		}
 
 		public HeadGroup getParent() {
