@@ -109,7 +109,7 @@ public class Main extends JFrame {
 		area2.setBorder(border2);
 		jp.add(area2);
 		
-		System.out.println("cddddddddd"+fl.preferredLayoutSize(area2));
+//		System.out.println("cddddddddd"+fl.preferredLayoutSize(area2));
 		CustomPanel area3 = new CustomPanel(jt,"Data",new Dimension(getPreferredSize().width-(2*areaWidth+6),20));
 		Border border3 = BorderFactory.createMatteBorder(0, 0, 0, 0, Color.red);
 		area3.setBorder(border3);

@@ -131,11 +131,32 @@ public class MyTable extends JTable {
 		return converter;
 	}
 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	GroupableTableHeader header;
 	public void updateContent(TransForm t,boolean isSort,int sortType){
 		if(!isSort)
 			t.trans();
-		GroupableTableHeader header = (GroupableTableHeader) getTableHeader();	
 		HeadGroup hg = t.getColG();
+		header = (GroupableTableHeader) getTableHeader();	
 		/*
 		 * first time initiate the plain table 
 		 */
@@ -146,12 +167,17 @@ public class MyTable extends JTable {
 			}
 			return;
 		}
-		/*
-		 * build the row header table
-		 */
+		this.addRowHeaderTable(t, isSort, sortType);
+		this.addMainTable(t, isSort, sortType);
+		this.addColumnHeader(t, hg, isSort, sortType);
+	}
+	
+	
+	
+	
+	
+	public void addRowHeaderTable(TransForm t,boolean isSort,int sortType){
 		HeadGroup rg = t.getRowG();
-
-		
 		rowHead = new String[rg.getHeight()];
 		List<HeadGroup> topList2 = rg.getNextOne(rg);
 		int rowHeaderRows = 0;
@@ -179,7 +205,8 @@ public class MyTable extends JTable {
 					return 0;
 			}
 		});
-//		
+		
+		
 		MyTableModel m2 = new MyTableModel(false,rowHead,rowTableData,this.rowTableTotalSpan,MyTableModel.MODEL_TPE_ROW);
 		//add vertical span
 		for(int[] spans:verticalSpanInfo){
@@ -195,11 +222,29 @@ public class MyTable extends JTable {
 			this.rowTableData[x][y] = content;
 		}
 		
-		MyTable spanedTable = new MyTable(m2,null,null);
+		spanedTable = new MyTable(m2,null,null);
 //		JPanel leftCorner = new JPanel();
 		leftCorner.setLayout(null);
-		leftCorner.setBackground(Main.bgColor);
+		leftCorner.setBackground(Main.bgColor);	
 		
+		JViewport v = (JViewport)this.fixTable.getParent();
+		if(!isSort||sortType==1){
+			v.remove(fixTable);
+			for(int i=0;i<spanedTable.columnModel.getColumnCount();i++){
+				TableColumn tc = spanedTable.columnModel.getColumn(i);
+				tc.setCellRenderer(new MyHeaderRenderer());
+			}
+			spanedTable.setIntercellSpacing(new Dimension(0,0));
+			v.setView(spanedTable);
+			this.fixTable = spanedTable;
+			v.setPreferredSize(spanedTable.getPreferredSize());
+		}
+		
+	}
+	
+	
+	MyTable spanedTable;
+	public void addMainTable(TransForm t,boolean isSort,int sortType){
 		/*
 		 * build the column table and the spaned table header
 		 */
@@ -276,31 +321,64 @@ public class MyTable extends JTable {
 			tc.setCellRenderer(new MyCellRenderer());
 			tc.setHeaderRenderer(new MyHeaderRenderer());
 		}
-		List<HeadGroup> topList = hg.getNextOne(hg);
-//		if(isSort == false||sortType==0)
-		buildHeaderClean();
-			this.buildHeader(topList);
-		
-		
-//		if(!isSort){
-		/*
-		 * set the upper-left corner header
-		 */
-		JViewport v = (JViewport)this.fixTable.getParent();
-		if(!isSort||sortType==1){
-			v.remove(fixTable);
-			for(int i=0;i<spanedTable.columnModel.getColumnCount();i++){
-				TableColumn tc = spanedTable.columnModel.getColumn(i);
-				tc.setCellRenderer(new MyHeaderRenderer());
-			}
-			spanedTable.setIntercellSpacing(new Dimension(0,0));
-			v.setView(spanedTable);
-			this.fixTable = spanedTable;
-			v.setPreferredSize(spanedTable.getPreferredSize());
-		}
-		
+	}
+	
+	public void addHeaderButton(TransForm t,boolean isSort,int sortType){
+		JViewport v = (JViewport)this.fixTable.getParent();		
 		builderButtonHeader(v,header,spanedTable,t,isSort);
 	}
+	
+	
+	public void addColumnHeader(TransForm t,HeadGroup hg,boolean isSort,int sortType){
+		List<HeadGroup> topList = hg.getNextOne(hg);
+		buildHeaderClean();
+			this.buildHeader(topList);
+		this.addHeaderButton(t, isSort, sortType);
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	JPanel leftCorner = new JPanel();;
@@ -314,10 +392,12 @@ public class MyTable extends JTable {
 		if(!isSort){
 			for(int rowIndex = 0;rowIndex<t.getRowItem().size();rowIndex++){
 				MyButton jb = new MyButton(t.getOriHead()[t.getRowItem().get(rowIndex)],t,1,this,rowIndex);
-				int width = leftTableHeader.getColumnModel().getColumn(rowIndex).getPreferredWidth();
+				TableColumn tc = leftTableHeader.getColumnModel().getColumn(rowIndex);
+				int width = tc.getPreferredWidth();
 				Dimension oriD = jb.getPreferredSize();
 				jb.setBackground(Main.bgColor);
 				leftCorner.add(jb);
+				System.out.println();
 				jb.setBounds(leftOffSet,cornerHeight-oriD.height,width,oriD.height);
 	//			jb.setBounds(leftOffSet,0,width,oriD.height);
 				leftOffSet+=width;

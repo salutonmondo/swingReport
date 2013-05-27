@@ -136,9 +136,9 @@ public class MyButton extends JButton {
 			Graphics2D g2d = (Graphics2D) g;
 			g2d.setStroke(new BasicStroke(1f));
 			Insets in = b.getInsets();
-			int x1 = textRect.x + textRect.width + 8;
+			int x1 = textRect.x + textRect.width + 4;
 			int y1 = textRect.y + in.top;
-			int x2 = textRect.x + textRect.width + 8;
+			int x2 = textRect.x + textRect.width + 4;
 			int y2 = textRect.y + textRect.height - in.bottom;
 			g2d.drawLine(x1, y1, x2, y2);
 
@@ -179,7 +179,7 @@ public class MyButton extends JButton {
 			AbstractButton b = (AbstractButton) c;
 			Dimension old = BasicGraphicsUtils.getPreferredButtonSize(b,
 					b.getIconTextGap());
-			Dimension d = new Dimension(old.width + 16, old.height);
+			Dimension d = new Dimension(old.width+25, old.height);
 			return d;
 		}
 
@@ -187,6 +187,11 @@ public class MyButton extends JButton {
 		protected void paintButtonPressed(Graphics g, AbstractButton b) {
 
 		}
+		
+		@Override
+		 protected void paintFocus(Graphics g, AbstractButton b, Rectangle viewRect, Rectangle textRect, Rectangle iconRect){
+
+		 }
 
 	}
 }
