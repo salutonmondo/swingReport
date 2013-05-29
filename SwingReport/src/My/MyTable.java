@@ -137,7 +137,7 @@ public class MyTable extends JTable {
 	public void updateContent(TransForm t,boolean isSort,int sortType){
 		if(!isSort)
 			t.trans();
-		HeadGroup hg = t.getColG();
+		hg = t.getColG();
 		header = (GroupableTableHeader) getTableHeader();	
 		/*
 		 * first time initiate the plain table 
@@ -152,13 +152,16 @@ public class MyTable extends JTable {
 		this.prepareRowHeaderTable(t, isSort, sortType);
 		this.addRowHeaderTable(t, isSort, sortType);
 		this.prepareMainTable(t, isSort, sortType);
-		this.addMainTable(t, mainData);
-		this.addColumnHeader(t, hg, isSort, sortType);
+		this.addMainTable(t.getResultHead(), mainData);
+		this.headNames = t.getResultHead();
+		this.addColumnHeader(t,isSort, sortType);
 	}
 	
 	String[][] foldRowData;
 	int foldIdentifier ;
+	String[] headNames;
 	Map<Integer,FoldUpInfo> foldInfo = new HashMap<Integer,FoldUpInfo>();
+	String[][] foldedMainData;
 	public void onFoldUpItem(int columnIndex,int start,int end){
 		String[] tmp = null;
 		int range = end-start+1;
@@ -188,42 +191,47 @@ public class MyTable extends JTable {
 			}
 			
 		}
-		MyTableModel m = (MyTableModel)this.spanedTable.getModel();
-		m.spanAreas.clear();
+		MyTableModel rowTableModel = (MyTableModel)this.spanedTable.getModel();
+		rowTableModel.spanAreas.clear();
+		
 		for(int[] spans:verticalSpanInfo){
 			if(spans[0]==start&&spans[0]+spans[2]-1==end)
 			{System.out.println(spans[0]+spans[2]-1);
 			System.out.println(spans[0]);}
 			else if(spans[0]<=start&&spans[0]+spans[2]-1>=end){
-				m.addSpan(spans[0], spans[1], spans[0]+spans[2]-range-1, spans[1]);
+				rowTableModel.addSpan(spans[0], spans[1], spans[0]+spans[2]-range-1, spans[1]);
 			}else if(spans[0]<start){
-				m.addSpan(spans[0], spans[1], spans[0]+spans[2]-1, spans[1]);
+				rowTableModel.addSpan(spans[0], spans[1], spans[0]+spans[2]-1, spans[1]);
 			}	
 			else if(spans[0]>end){
-				m.addSpan(spans[0]-range, spans[1], spans[0]+spans[2]-1-range, spans[1]);
+				rowTableModel.addSpan(spans[0]-range, spans[1], spans[0]+spans[2]-1-range, spans[1]);
 			}	
 		}
 		
-		
+		this.totalRowSet.clear();
 		for(Object[] horizentalSpan :this.rowTableTotalSpan){
 			int y = Integer.parseInt(horizentalSpan[1].toString());
 			int x = Integer.parseInt(horizentalSpan[0].toString())-1;
 			String content = horizentalSpan[2].toString();
-			int end1 = m.getColumnCount()-1;
+			int end1 = rowTableModel.getColumnCount()-1;
 			if(x>end){
-				m.addSpan(x-range, y, x-range, end1);
+				rowTableModel.addSpan(x-range, y, x-range, end1);
+				totalRowSet.add(x-range);
 			}	
 			else{
-				m.addSpan(x, y, x, end1);
+				rowTableModel.addSpan(x, y, x, end1);
 				this.rowTableData[x][y] = content;
+				totalRowSet.add(x);
 			}
 				
-			int[] foldUpPosition = new int[3];
+			int[] foldUpPosition = new int[5];
 			foldUpPosition[0] = columnIndex;
 			foldUpPosition[1] = start;
-			foldUpPosition[0] = m.getColumnCount()-1;
+			foldUpPosition[2] = end;
+			foldUpPosition[3] = range;
+			foldUpPosition[4] = rowTableModel.getColumnCount()-1;
 			
-			String[][] foldUpContent = new String[range][m.getColumnCount()];
+			String[][] foldUpContent = new String[range][rowTableModel.getColumnCount()];
 			String[][] foldUpMainContent = new String[range][this.mainData[0].length];
 			for(int a=0;a<range;a++){
 				foldUpContent[a] = this.rowTableData[a+start];
@@ -232,10 +240,31 @@ public class MyTable extends JTable {
 			FoldUpInfo foldupinfo = new FoldUpInfo(foldUpPosition,foldUpContent,foldUpMainContent);
 			this.foldInfo.put(this.foldIdentifier, foldupinfo);
 		}
-		m.data = foldRowData;
+		rowTableModel.data = foldRowData;
 		
-		this.inserRowTable(m, false, 1);
+		/*
+		 * cut the folded row of the main table data 
+		 */
+		foldedMainData = new String[this.mainData.length-range][this.mainData[0].length];
+		int k = 0;
+		for(int j=0;j<this.mainData.length;j++){
+			if(j>=start&&j<=end){
+			}
+			else{
+				foldedMainData[k] = this.mainData[j];
+				k++;
+			}
+		}
+		this.addMainTable(this.headNames, foldedMainData);
+		this.inserRowTable(rowTableModel, false, 1);
 		
+	}
+	
+	public void onCollapseItem(int indetifier){
+		FoldUpInfo fi = this.foldInfo.get(indetifier);
+		int[] foldPosition = fi.foldUpPostion;
+		String[][] tmpRowTableData = new String[this.foldRowData.length+foldPosition[3]][this.foldRowData[0].length];
+		String[][] tmpRowMainTableData = new String[this.mainData.length+foldPosition[3]][this.mainData[0].length];
 	}
 	
 	public void prepareRowHeaderTable(TransForm t,boolean isSort,int sortType){
@@ -400,22 +429,20 @@ public class MyTable extends JTable {
 		mainData = newDataArray;
 	}
 	
-	public void addMainTable(TransForm t,String[][] newDataArray){
-		m = new MyTableModel(false,t.getResultHead(),newDataArray,null,MyTableModel.MODEL_TPE_DATA);
-//		for(int spanRowNo:totalRowSpanList){
-//			m.addSpan(spanRowNo, 0, spanRowNo, dataSpanEnd);
-//		}
+	public void addMainTable(String[] headNames,String[][] newDataArray){
+		m = new MyTableModel(false,headNames,newDataArray,null,MyTableModel.MODEL_TPE_DATA);
 		this.setModel(m);
 		for(int i=0;i<this.columnModel.getColumnCount();i++){
 			TableColumn tc = this.columnModel.getColumn(i);
 			tc.setCellRenderer(new MyCellRenderer());
 			tc.setHeaderRenderer(new MyHeaderRenderer());
 		}
-	}
-	public void addColumnHeader(TransForm t,HeadGroup hg,boolean isSort,int sortType){
 		List<HeadGroup> topList = hg.getNextOne(hg);
 		buildHeaderClean();
-			this.buildHeader(topList);
+		this.buildHeader(topList);
+	}
+	HeadGroup hg;
+	public void addColumnHeader(TransForm t,boolean isSort,int sortType){
 		JViewport v = (JViewport)this.fixTable.getParent();		
 		JScrollPane jp = (JScrollPane)v.getParent().getParent();
 		int cornerHeight = ((GroupableTableHeaderUI)header.getUI()).getHeaderHeight();
