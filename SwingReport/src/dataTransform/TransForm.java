@@ -372,7 +372,8 @@ public class TransForm {
         int height=0;
         int baseLine = 0;
         int extraLine = 0;
-        int sortOrder = -1;// -1 for ascent 1 for decent   
+        int sortOrder = -1;// -1 for ascent 1 for decent  
+        
         //the row or data header range, 0:start no 1:end no.
         int[] range = new int[2];
 		public void addSelf(Object obj) {

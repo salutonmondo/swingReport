@@ -8,10 +8,14 @@ import javax.swing.table.AbstractTableModel;
 
 
 public class MyTableModel extends AbstractTableModel {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	boolean showLineNumber;
 	List<SpanArea> spanAreas = new ArrayList<SpanArea>();
 	private String[] columnNames;
-	private Object[][] data;
+	Object[][] data;
 	//the insertion info of the total row.
 	List<Object[]> insertInfo;
 	static int MODEL_TPE_ROW = 0;

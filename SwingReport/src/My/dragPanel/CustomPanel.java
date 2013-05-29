@@ -79,6 +79,16 @@ public class CustomPanel extends JPanel implements DropTargetListener{
     	this.areaName = areaName;
     	dropTarget = new DropTarget(this,DnDConstants.ACTION_COPY_OR_MOVE,this, true, null);
 		this.setLayout(new FlowLayout());
+		
+		this.addMouseListener(new MouseAdapter(){
+
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				((MyTable)CustomPanel.this.table).onFoldUpItem(1,4, 5);
+			}
+			
+			
+		});
     }
     
     public Dimension getPreferredSize() {
