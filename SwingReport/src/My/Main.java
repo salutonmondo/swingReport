@@ -48,7 +48,7 @@ public class Main extends JFrame {
 	public void initComponent() {
 		String[][] data = new String[][] { { "1", "NK", "800", "A05","red" },{ "1", "NK", "800", "A05","yellow" },
 				{ "1", "NK", "900", "A04","red" }, { "2", "NK", "900", "A05" ,"yellow"},
-				{ "1", "TK", "400", "A05" ,"red"}, { "2", "TK", "300", "A05","yellow" },
+				{ "1", "TK", "400", "A05" ,"red"}, { "2", "TK", "300", "A05","y3ellow" },
 				{ "3", "TK", "700", "A05" ,"red"},{ "1", "TK", "200", "A05" ,"yellow"} };
 		String[] head = new String[] { "month", "depStore", "sales", "product","color" };
 		js = new JScrollPane();

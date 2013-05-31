@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -155,14 +156,18 @@ public class MyTable extends JTable {
 		this.addMainTable(t.getResultHead(), mainData);
 		this.headNames = t.getResultHead();
 		this.addColumnHeader(t,isSort, sortType);
+		
+		
 	}
 	
-	String[][] foldRowData;
+	
 	int foldIdentifier ;
 	String[] headNames;
 	Map<Integer,FoldUpInfo> foldInfo = new HashMap<Integer,FoldUpInfo>();
-	String[][] foldedMainData;
+	
 	public void onFoldUpItem(int columnIndex,int start,int end){
+		String[][] foldedMainData;
+		String[][] foldRowData;
 		String[] tmp = null;
 		int range = end-start+1;
 		boolean shouldAdd = false;
@@ -192,54 +197,88 @@ public class MyTable extends JTable {
 			
 		}
 		MyTableModel rowTableModel = (MyTableModel)this.spanedTable.getModel();
+		List<int[]> tmpVerticalSpanInfo = rowTableModel.getVerticalSpanInfo();
+		List<Object[]> tmpHorizenTalSpanInof = rowTableModel.getHorizentalSpanInfo();
 		rowTableModel.spanAreas.clear();
-		
-		for(int[] spans:verticalSpanInfo){
-			if(spans[0]==start&&spans[0]+spans[2]-1==end)
-			{System.out.println(spans[0]+spans[2]-1);
-			System.out.println(spans[0]);}
+		List<int[]> foldedSpanInfo = new ArrayList<int[]>();
+//		for(int[] spans:verticalSpanInfo){
+		for(int[] spans:tmpVerticalSpanInfo){
+			if (spans[0] == start && spans[0] + spans[2] - 1 == end) {
+				System.out.println(spans[0] + spans[2] - 1);
+				System.out.println(spans[0]);
+				foldedSpanInfo.add(new int[]{spans[0]-start,spans[1],spans[2]});
+			}
 			else if(spans[0]<=start&&spans[0]+spans[2]-1>=end){
-				rowTableModel.addSpan(spans[0], spans[1], spans[0]+spans[2]-range-1, spans[1]);
+				rowTableModel.addSpan(spans[0], spans[1], spans[0]+spans[2]-range-1, spans[1],MyTableModel.SPAN_DIRECTION_VER);
 			}else if(spans[0]<start){
-				rowTableModel.addSpan(spans[0], spans[1], spans[0]+spans[2]-1, spans[1]);
+				rowTableModel.addSpan(spans[0], spans[1], spans[0]+spans[2]-1, spans[1],MyTableModel.SPAN_DIRECTION_VER);
 			}	
 			else if(spans[0]>end){
-				rowTableModel.addSpan(spans[0]-range, spans[1], spans[0]+spans[2]-1-range, spans[1]);
+				rowTableModel.addSpan(spans[0]-range, spans[1], spans[0]+spans[2]-1-range, spans[1],MyTableModel.SPAN_DIRECTION_VER);
 			}	
+			else if(spans[0]>=start&&spans[0]+spans[2]-1<=end){
+				foldedSpanInfo.add(new int[]{spans[0]-start,spans[1],spans[2]});
+			}
 		}
 		
+		
+		
 		this.totalRowSet.clear();
-		for(Object[] horizentalSpan :this.rowTableTotalSpan){
+		List<Object[]> foldSpanInfoh = new ArrayList<Object[]>();
+//		SpanArea spanArea = rowTableModel.new SpanArea(); 
+//		for(Object[] horizentalSpan :this.rowTableTotalSpan){
+		for(Object[] horizentalSpan :tmpHorizenTalSpanInof){
 			int y = Integer.parseInt(horizentalSpan[1].toString());
 			int x = Integer.parseInt(horizentalSpan[0].toString())-1;
 			String content = horizentalSpan[2].toString();
 			int end1 = rowTableModel.getColumnCount()-1;
 			if(x>end){
-				rowTableModel.addSpan(x-range, y, x-range, end1);
+				SpanArea spanArea = rowTableModel.new SpanArea(); 
+				spanArea.beginX = x-range;
+				spanArea.beginY = y;
+				spanArea.endX = x-range;
+				spanArea.endY = end1;
+				spanArea.type = MyTableModel.SPAN_DIRECTION_HOR;
+				spanArea.horizentalText = content;
+				rowTableModel.addSpan(spanArea);
+//				rowTableModel.addSpan(x-range, y, x-range, end1,MyTableModel.SPAN_DIRECTION_HOR);
 				totalRowSet.add(x-range);
 			}	
-			else{
-				rowTableModel.addSpan(x, y, x, end1);
+			else if(x<start){
+				SpanArea spanArea = rowTableModel.new SpanArea(); 
+				spanArea.beginX = x;
+				spanArea.beginY = y;
+				spanArea.endX = x;
+				spanArea.endY = end1;
+				spanArea.type = MyTableModel.SPAN_DIRECTION_HOR;
+				spanArea.horizentalText = content;
+//				rowTableModel.addSpan(x, y, x, end1,MyTableModel.SPAN_DIRECTION_HOR);
+				rowTableModel.addSpan(spanArea);
 				this.rowTableData[x][y] = content;
 				totalRowSet.add(x);
 			}
-				
-			int[] foldUpPosition = new int[5];
-			foldUpPosition[0] = columnIndex;
-			foldUpPosition[1] = start;
-			foldUpPosition[2] = end;
-			foldUpPosition[3] = range;
-			foldUpPosition[4] = rowTableModel.getColumnCount()-1;
-			
-			String[][] foldUpContent = new String[range][rowTableModel.getColumnCount()];
-			String[][] foldUpMainContent = new String[range][this.mainData[0].length];
-			for(int a=0;a<range;a++){
-				foldUpContent[a] = this.rowTableData[a+start];
-				foldUpMainContent[a] = this.mainData[a+start];
+			else{
+				foldSpanInfoh.add(new Object[]{x-start,y,content});
 			}
-			FoldUpInfo foldupinfo = new FoldUpInfo(foldUpPosition,foldUpContent,foldUpMainContent);
-			this.foldInfo.put(this.foldIdentifier, foldupinfo);
 		}
+		
+		int[] foldUpPosition = new int[5];
+		foldUpPosition[0] = columnIndex;
+		foldUpPosition[1] = start;
+		foldUpPosition[2] = end;
+		foldUpPosition[3] = range;
+		foldUpPosition[4] = rowTableModel.getColumnCount()-1;
+		
+		String[][] foldUpContent = new String[range][rowTableModel.getColumnCount()];
+		String[][] foldUpMainContent = new String[range][this.mainData[0].length];
+		for(int a=0;a<range;a++){
+			foldUpContent[a] = this.rowTableData[a+start];
+			foldUpMainContent[a] = this.mainData[a+start];
+		}
+		FoldUpInfo foldupinfo = new FoldUpInfo(foldUpPosition,foldUpContent,foldUpMainContent,foldedSpanInfo,foldSpanInfoh);
+		this.foldInfo.put(this.foldIdentifier, foldupinfo);
+		
+		foldIdentifier++;
 		rowTableModel.data = foldRowData;
 		
 		/*
@@ -255,16 +294,111 @@ public class MyTable extends JTable {
 				k++;
 			}
 		}
+		
+		for(SpanArea x:rowTableModel.spanAreas){
+			System.out.println("!!!!!!!!!!"+x);
+		}
 		this.addMainTable(this.headNames, foldedMainData);
 		this.inserRowTable(rowTableModel, false, 1);
-		
+		this.rowTableData = foldRowData;
+		this.mainData = foldedMainData;
 	}
 	
 	public void onCollapseItem(int indetifier){
+		this.totalRowSet.clear();
+		MyTableModel rowTableModel = (MyTableModel)this.spanedTable.getModel();
+		List<int[]> tmpVerticalSpanInfo = rowTableModel.getVerticalSpanInfo();
+		List<Object[]> tmpHorizenTalSpanInof = rowTableModel.getHorizentalSpanInfo();
+		
+		rowTableModel.spanAreas.clear();
 		FoldUpInfo fi = this.foldInfo.get(indetifier);
-		int[] foldPosition = fi.foldUpPostion;
-		String[][] tmpRowTableData = new String[this.foldRowData.length+foldPosition[3]][this.foldRowData[0].length];
-		String[][] tmpRowMainTableData = new String[this.mainData.length+foldPosition[3]][this.mainData[0].length];
+		int[] foldUpPosition = fi.foldUpPostion;
+		String[][] tmpRowTableData = new String[this.rowTableData.length+foldUpPosition[3]][this.rowTableData[0].length];
+		String[][] tmpRowMainTableData = new String[this.mainData.length+foldUpPosition[3]][this.mainData[0].length];
+		
+		for(int i=0,j= 0;i<tmpRowTableData.length;){
+			if(i!=foldUpPosition[1]){
+				tmpRowTableData[i]= this.rowTableData[j];
+				tmpRowMainTableData[i] = this.mainData[j];
+				j++;
+				i++;
+			}
+			else{
+				for(int k=0;k<foldUpPosition[3];k++){
+					tmpRowTableData[i]= fi.foldUpContent[k];
+					tmpRowMainTableData[i] = fi.foldUpMainContent[k];
+					i++;
+				}
+			}
+		}
+		rowTableModel.data = tmpRowTableData;
+
+		for(int[] spans:tmpVerticalSpanInfo){
+			int top = spans[0];
+			int bottom = spans[0]+spans[2]-1;
+			int foldPoint = foldUpPosition[1]; 
+			if (top<=foldPoint&&bottom>=foldPoint) {
+				rowTableModel.addSpan(spans[0], spans[1], spans[0]+spans[2]+foldUpPosition[3]-1, spans[1],MyTableModel.SPAN_DIRECTION_VER);
+			}
+			else if(top<foldPoint){
+				rowTableModel.addSpan(spans[0], spans[1], spans[0]+spans[2]-1, spans[1],MyTableModel.SPAN_DIRECTION_VER);
+			}	
+			else if(top>foldPoint){
+				rowTableModel.addSpan(spans[0]+foldUpPosition[3], spans[1], spans[0]+spans[2]+foldUpPosition[3]-1, spans[1],MyTableModel.SPAN_DIRECTION_VER);
+			}	
+		}
+		
+		for(int[] spans:fi.foldedSpanInfo){
+			rowTableModel.addSpan(spans[0]+foldUpPosition[1], spans[1], foldUpPosition[1]+spans[0]+spans[2]-1, spans[1], 0);
+		}
+
+		for(Object[] horizentalSpan:tmpHorizenTalSpanInof){
+			int y = Integer.parseInt(horizentalSpan[1].toString());
+			int x = Integer.parseInt(horizentalSpan[0].toString())-1;
+			if(x<foldUpPosition[1]){
+				SpanArea spanArea = rowTableModel.new SpanArea(); 
+				spanArea.beginX = x;
+				spanArea.beginY = y;
+				spanArea.endX = x;
+				spanArea.endY = rowTableModel.getColumnCount()-1;
+				spanArea.type = MyTableModel.SPAN_DIRECTION_HOR;
+				spanArea.horizentalText = horizentalSpan[2].toString();
+				rowTableModel.addSpan(spanArea);
+				this.totalRowSet.add(x);
+			}
+			else{
+				SpanArea spanArea = rowTableModel.new SpanArea(); 
+				spanArea.beginX = x+foldUpPosition[3];
+				spanArea.beginY = y;
+				spanArea.endX = x+foldUpPosition[3];
+				spanArea.endY = rowTableModel.getColumnCount()-1;
+				spanArea.type = MyTableModel.SPAN_DIRECTION_HOR;
+				spanArea.horizentalText = horizentalSpan[2].toString();
+				rowTableModel.addSpan(spanArea);
+				this.totalRowSet.add(x+foldUpPosition[3]);
+			}
+		}
+		
+		for(Object[] horizentalSpan:fi.foldSpanInfoh){
+			int y = Integer.parseInt(horizentalSpan[1].toString());
+			int x = Integer.parseInt(horizentalSpan[0].toString())-1;
+			SpanArea spanArea = rowTableModel.new SpanArea(); 
+			spanArea.beginX = x+foldUpPosition[1]+1;
+			spanArea.beginY = y;
+			spanArea.endX = x+foldUpPosition[1]+1;
+			spanArea.endY = rowTableModel.getColumnCount()-1;
+			spanArea.type = MyTableModel.SPAN_DIRECTION_HOR;
+			spanArea.horizentalText = horizentalSpan[2].toString();
+			rowTableModel.addSpan(spanArea);
+			this.totalRowSet.add(x+foldUpPosition[1]);
+		}
+		
+		
+		this.addMainTable(this.headNames, tmpRowMainTableData);
+		this.inserRowTable(rowTableModel, false, 1);
+		this.rowTableData = tmpRowTableData;
+		this.mainData = tmpRowMainTableData;
+		
 	}
 	
 	public void prepareRowHeaderTable(TransForm t,boolean isSort,int sortType){
@@ -279,10 +413,11 @@ public class MyTable extends JTable {
 		}
 //		rowTableData = new String[rg.getDegree()][rg.getHeight()];
 		rowTableData = new String[rowHeaderRows][rg.getHeight()];
-		if(!isSort||sortType==1){
-			BuilderRowHeaderClean();
+//		if(!isSort||sortType==1){
+//		if(!isSort){
+			BuilderRowHeaderClean(rg);
 			BuilderRowHeader(topList2);
-		}
+//		}
 		//because the paint process is executed row by row so the horizental span info must first be sorted.
 		Collections.sort(this.rowTableTotalSpan, new Comparator<Object[]>() {
 			public int compare(Object[] o1,Object[] o2) {
@@ -307,7 +442,7 @@ public class MyTable extends JTable {
 		MyTableModel m2 = new MyTableModel(false,rowHead,rowTableData,this.rowTableTotalSpan,MyTableModel.MODEL_TPE_ROW);
 		//add vertical span
 		for(int[] spans:verticalSpanInfo){
-			m2.addSpan(spans[0], spans[1], spans[0]+spans[2]-1, spans[1]);
+			m2.addSpan(spans[0], spans[1], spans[0]+spans[2]-1, spans[1],0);
 		}
 		
 		for(int[] array:this.verticalSpanInfo){
@@ -320,8 +455,15 @@ public class MyTable extends JTable {
 			int x = Integer.parseInt(horizentalSpan[0].toString())-1;
 			String content = horizentalSpan[2].toString();
 			int end = m2.getColumnCount()-1;
-			m2.addSpan(x, y, x, end);
-			System.out.println(x+" "+y+" "+" "+x+" "+end);
+			SpanArea s = m2.new SpanArea();
+			s.beginX = x;
+			s.beginY = y;
+			s.endX = x;
+			s.endY = end;
+			s.type = MyTableModel.SPAN_DIRECTION_HOR;
+			s.horizentalText = content;
+			m2.addSpan(s);
+//			m2.addSpan(x, y, x, end,1);
 //			m2.addSpan(x, y, end, y);
 			this.rowTableData[x][y] = content;
 		}
@@ -335,7 +477,8 @@ public class MyTable extends JTable {
 		leftCorner.setBackground(Main.bgColor);	
 		
 		JViewport v = (JViewport)this.fixTable.getParent();
-		if(!isSort||sortType==1){
+//		if(!isSort||sortType==1){
+//		if(!isSort||sortType==1){
 			v.remove(fixTable);
 			for(int i=0;i<spanedTable.columnModel.getColumnCount();i++){
 				TableColumn tc = spanedTable.columnModel.getColumn(i);
@@ -345,7 +488,7 @@ public class MyTable extends JTable {
 			v.setView(spanedTable);
 			this.fixTable = spanedTable;
 			v.setPreferredSize(spanedTable.getPreferredSize());
-		}
+//		}
 	}
 	
 	MyTable spanedTable;
@@ -540,14 +683,31 @@ public class MyTable extends JTable {
 		BuilderRowHeader(nextList);
 	}
 	
-	public void BuilderRowHeaderClean(){
+	public void BuilderRowHeaderClean(HeadGroup p){
 		rowCacuHeight = 0;
 		verticalSpan = 0;
 		verticalSpanInfo = new ArrayList<int[]>();
 		totalRowSet = new HashSet<Integer>();
 		breakMap = new HashMap<Integer,Integer>();
 		rowTableTotalSpan = new ArrayList<Object[]>();
+		cleanRowSpanInfo(p);
 	}
+	
+	public void cleanRowSpanInfo( HeadGroup p){
+		for(Map.Entry<String, HeadGroup> ent:p.getHash().entrySet()){
+			HeadGroup subGroup = ent.getValue();
+			subGroup.setBaseLine(0);
+			subGroup.setExtraLine(0);
+			if(subGroup.getHash2()!=null){
+//				subGroup.setHash2(new LinkedHashMap<Integer,Integer>());
+			}
+			if(subGroup.getHash()!=null){
+				cleanRowSpanInfo(subGroup);
+			}
+		}
+		
+	}
+	
 	public void getRowSpanIncludeTotal(HeadGroup p) {
 		if(p.getHash2()!=null){
 			this.verticalSpan = verticalSpan+ 1;
@@ -656,10 +816,14 @@ public class MyTable extends JTable {
 		int[] foldUpPostion;
 		String[][] foldUpContent;
 		String[][] foldUpMainContent;
-		public FoldUpInfo(int[] foldUpPostion,String[][] foldUpContent,String[][] foldUpMainContent){
+		List<int[]> foldedSpanInfo;
+		List<Object[]> foldSpanInfoh;
+		public FoldUpInfo(int[] foldUpPostion,String[][] foldUpContent,String[][] foldUpMainContent,List<int[]> foldedSpanInfo,List<Object[]> foldSpanInfoh){
 			this.foldUpContent = foldUpContent;
 			this.foldUpPostion = foldUpPostion;
 			this.foldUpMainContent = foldUpMainContent;
+			this.foldedSpanInfo = foldedSpanInfo;
+			this.foldSpanInfoh = foldSpanInfoh;
 		}	
 	}
 	

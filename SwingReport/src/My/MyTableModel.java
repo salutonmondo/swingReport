@@ -20,7 +20,8 @@ public class MyTableModel extends AbstractTableModel {
 	List<Object[]> insertInfo;
 	static int MODEL_TPE_ROW = 0;
 	static int MODEL_TPE_DATA = 1;
-
+	public static int SPAN_DIRECTION_VER = 0;
+	public static int SPAN_DIRECTION_HOR = 1;
 	public MyTableModel(boolean showLineNumber,String[] columnNames,Object[][] data,List<Object[]> insertInfo,int modelType) {
 		super();
 		this.columnNames=columnNames;
@@ -59,14 +60,18 @@ public class MyTableModel extends AbstractTableModel {
 		    return columnNames[column];
 	}
 
-	public void addSpan(int x1, int y1, int x2, int y2) {
+	public void addSpan(int x1, int y1, int x2, int y2,int type) {
 		SpanArea s = new SpanArea();
 		s.beginX = x1;
 		s.endX = x2;
 		s.beginY = y1;
 		s.endY = y2;
+		s.type = type;
 		spanAreas.add(s);
-//		System.out.println("cell1 " + x1 + "," + y1 + " cell2" + x2 + ","+ y2);
+	}
+	
+	public void addSpan(SpanArea s) {
+		spanAreas.add(s);
 	}
 
 	public SpanArea isSpaened(int row, int col) {
@@ -92,11 +97,12 @@ public class MyTableModel extends AbstractTableModel {
 	
 
 	class SpanArea {
-		int beginX;
-		int beginY;
-		int endX;
-		int endY;
-		
+		public int beginX;
+		public int beginY;
+		public int endX;
+		public int endY;
+		public int type; //0 for vertial 1 for horizental
+		public String horizentalText ;
 		public int getRows(){
 			return endY-beginY+1;
 		}
@@ -108,6 +114,14 @@ public class MyTableModel extends AbstractTableModel {
 	    	int[] rowAndCol = new int[]{beginX,beginY};
 	    	return rowAndCol;
 	    }
+	    
+	    @Override
+	    public String toString(){
+	    	if(type==0)
+	    		return "v  "+beginX+"_"+beginY+"_"+endX+"_"+endY;
+	    	else
+	    		return "h  "+beginX+"_"+beginY+"_"+endX+"_"+endY;
+	    }
 	}
 
 
@@ -116,7 +130,31 @@ public class MyTableModel extends AbstractTableModel {
 		return showLineNumber;
 	}
 	
+	public List<int[]> getVerticalSpanInfo(){
+		List<int[]> verticalSpanInfo = new ArrayList<int[]>();
+		for(SpanArea s:this.spanAreas){
+			if(s.type ==0 ){
+				int[] tmp= new int[3];
+				tmp[0] = s.beginX;
+				tmp[1] = s.beginY;
+				tmp[2] = s.endX-s.beginX+1;
+				verticalSpanInfo.add(tmp);
+			}
+		}
+		return verticalSpanInfo;
+	}
 	
-	
-
+	public List<Object[]> getHorizentalSpanInfo(){
+		List<Object[]> horizenTalSpanInfo = new ArrayList<Object[]>();
+		for(SpanArea s:this.spanAreas){
+			if(s.type ==1 ){
+				Object[] tmp= new Object[3];
+				tmp[0] = s.beginX+1;
+				tmp[1] = s.beginY;
+				tmp[2] = s.horizentalText;
+				horizenTalSpanInfo.add(tmp);
+			}
+		}
+		return horizenTalSpanInfo;
+	}
 }

@@ -84,8 +84,19 @@ public class CustomPanel extends JPanel implements DropTargetListener{
 
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				((MyTable)CustomPanel.this.table).onFoldUpItem(1,4, 5);
+				if(CustomPanel.this.areaName.equals("Row")){
+//					((MyTable)CustomPanel.this.table).onFoldUpItem(0,4, 9);
+					((MyTable)CustomPanel.this.table).onFoldUpItem(1,4, 5);
+//					((MyTable)CustomPanel.this.table).onFoldUpItem(0,1, 2);
+				}
+				else if(CustomPanel.this.areaName.equals("Data")){
+					((MyTable)CustomPanel.this.table).onFoldUpItem(1,5, 6);
+				}
+				else{
+					((MyTable)CustomPanel.this.table).onCollapseItem(0);
+				}
 			}
+			
 			
 			
 		});
